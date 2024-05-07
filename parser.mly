@@ -17,6 +17,10 @@
 %token Not
 %token Gt
 %token PlusEq
+
+%left Or
+%left And
+
 %start<Ast.t> main;
 %%
 
