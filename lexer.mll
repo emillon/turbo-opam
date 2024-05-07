@@ -5,6 +5,7 @@ let space = [' ''\t']+
 rule token = parse
     | eof { Parser.Eof }
     | ident as s { Parser.Ident s }
+    | ident as i1 ':' ident as i2 { Parser.Ident (i1 ^ ":" ^ i2) }
     | ':' { Colon }
     | space { token lexbuf }
     | '\n' { Lexing.new_line lexbuf; token lexbuf }
@@ -17,10 +18,10 @@ rule token = parse
     | '<' { Lt }
     | "<=" { Le }
     | '=' { Eq }
+    | ">=" { Ge }
     | '#' { line_comment lexbuf; token lexbuf }
     | '(' { Lparen }
     | ')' { Rparen }
-    | ">=" { Ge }
     | '|' { Or }
     | '&' { And }
     | "!=" { Neq }
