@@ -32,18 +32,17 @@ let parse_exp path =
 
 let term =
   let open Let_syntax in
-  let+ path =
-    Cmdliner.Arg.required
-      (Cmdliner.Arg.pos 0
-         Cmdliner.Arg.(some string)
-         None (Cmdliner.Arg.info []))
-  in
-  let _control =
-    let filename = OpamFile.make (OpamFilename.of_string path) in
-    In_channel.with_open_bin path (OpamFile.OPAM.read_from_channel ~filename)
-  in
-  let _exp = parse_exp path in
-  print_endline path
+  let+ paths = Cmdliner.Arg.(value & pos_all string [] & info []) in
+  List.iter
+    (fun path ->
+      let _control =
+        let filename = OpamFile.make (OpamFilename.of_string path) in
+        In_channel.with_open_bin path
+          (OpamFile.OPAM.read_from_channel ~filename)
+      in
+      let _exp = parse_exp path in
+      print_endline path)
+    paths
 
 let info = Cmdliner.Cmd.info "turbo-opam"
 let cmd = Cmdliner.Cmd.v info term
