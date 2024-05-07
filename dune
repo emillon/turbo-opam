@@ -4,3 +4,6 @@
  (libraries cmdliner opam-format pp_loc))
 
 (ocamllex lexer)
+
+(menhir
+ (modules parser))

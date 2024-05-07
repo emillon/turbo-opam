@@ -1,25 +1,9 @@
 {
-    type token =
-        | Ident of string
-        | Colon
-        | String of string
-        | Lbracket
-        | Rbracket
-        | Lbrace
-        | Rbrace
-        | Lt
-        | Eq
-        | Lparen
-        | Rparen
-        | Ge
-        | Or
-        | And
-        | Neq
-        | Not
-        | Gt
-        | PlusEq
+    type token = Parser.token
 
-    let token_to_string = function
+    let token_to_string =
+        let open Parser in
+        function
         | Ident s -> Printf.sprintf "Ident %S" s
         | Colon -> "Colon"
         | String s -> Printf.sprintf "String %S" s
@@ -28,6 +12,7 @@
         | Lbrace -> "Lbrace"
         | Rbrace -> "Rbrace"
         | Lt -> "Lt"
+        | Le -> "Le"
         | Eq -> "Eq"
         | Lparen -> "Lparen"
         | Rparen -> "Rparen"
@@ -46,7 +31,7 @@ let space = [' ''\t']+
 
 rule token = parse
     | eof { None }
-    | ident as s { Some (Ident s) }
+    | ident as s { Some (Parser.Ident s) }
     | ':' { Some Colon }
     | space { token lexbuf }
     | '\n' { Lexing.new_line lexbuf; token lexbuf }
@@ -57,6 +42,7 @@ rule token = parse
     | '{' { Some Lbrace }
     | '}' { Some Rbrace }
     | '<' { Some Lt }
+    | "<=" { Some Le }
     | '=' { Some Eq }
     | '#' { line_comment lexbuf; token lexbuf }
     | '(' { Some Lparen }

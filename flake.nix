@@ -11,7 +11,12 @@
           pname = "turbo-opam";
           version = "n/a";
           src = ./.;
-          propagatedBuildInputs = with pkgs.ocamlPackages; [ cmdliner opam-format pp_loc ];
+          propagatedBuildInputs = with pkgs.ocamlPackages; [
+            cmdliner
+            menhir
+            opam-format
+            pp_loc
+          ];
         };
         devShells.default = pkgs.mkShell {
           inputsFrom = [ self.packages.${system}.default ];
