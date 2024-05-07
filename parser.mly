@@ -17,6 +17,7 @@
 %token Not
 %token Gt
 %token PlusEq
+%token Eof
 
 %left Or
 %left And
@@ -24,7 +25,7 @@
 %start<Ast.t> main;
 %%
 
-main: kvs { $1 }
+main: kvs Eof { $1 }
 
 kvs: kv kvs { $1::$2}
 | Ident Lbrace kvs Rbrace { List.map (fun (k, v) -> $1::k, v) $3  }

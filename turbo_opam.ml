@@ -31,7 +31,6 @@ let report_outcome = function
 
 let parse_exp ~fail path =
   let exception Lexing_error of Lexing.position in
-  let exception Eof in
   let r =
     In_channel.with_open_bin path (fun ic ->
         let lb = Lexing.from_channel ic in
@@ -41,14 +40,13 @@ let parse_exp ~fail path =
             Parser.main
               (fun lb ->
                 match Lexer.token lb with
-                | Some t -> t
-                | None -> raise Eof
+                | t -> t
                 | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
               lb
           in
           Ok
         with
-        | Parser.Error | Eof -> Parse_error lb.lex_curr_p
+        | Parser.Error -> Parse_error lb.lex_curr_p
         | Lexing_error p -> Lexing_error p)
   in
   if fail then report_outcome r;
