@@ -1,0 +1,6 @@
+(executable
+ (public_name turbo-opam)
+ (name turbo_opam)
+ (libraries cmdliner opam-format pp_loc))
+
+(ocamllex lexer)
