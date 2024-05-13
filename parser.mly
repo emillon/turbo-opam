@@ -54,9 +54,9 @@ value:
 | Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
 | op value { V_op ($1, $2) }
-| value op2 value { V_op2 ($1, $2, $3) }
+| value op value { V_op2 ($1, $2, $3) }
+| value env_op value { V_envop ($1, $2, $3) }
 | value And value { V_and ($1, $3)}
-| value Or value { V_or ($1, $3)}
 | Ident { V_ident $1 }
 | Not value { V_not $2 }
 
@@ -72,11 +72,5 @@ op:
 | Eq { Eq }
 | Neq { Neq }
 
-op2:
-| Eq { Eq2 }
-| Neq { Neq2 }
-| Ge { Ge2 }
-| Gt { Gt2 }
-| Lt { Lt2 }
-| Le { Le2 }
+env_op:
 | PlusEq { PlusEq }
