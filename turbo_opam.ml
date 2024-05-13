@@ -93,14 +93,38 @@ let compile sections =
     (Ok (OpamFile.OPAM.create (OpamPackage.of_string "pkg.no")))
     sections
 
-let parse_lb lb =
+let token_to_string : Parser.token -> _ = function
+  | String _ -> "String"
+  | Rparen -> "Rparen"
+  | Rbracket -> "Rbracket"
+  | Rbrace -> "Rbrace"
+  | PlusEq -> "PlusEq"
+  | Or -> "Or"
+  | Not -> "Not"
+  | Neq -> "Neq"
+  | Lt -> "Lt"
+  | Lparen -> "Lparen"
+  | Le -> "Le"
+  | Lbracket -> "Lbracket"
+  | Lbrace -> "Lbrace"
+  | Ident _ -> "Ident"
+  | Gt -> "Gt"
+  | Ge -> "Ge"
+  | Eq -> "Eq"
+  | Eof -> "Eof"
+  | Colon -> "Colon"
+  | And -> "And"
+
+let parse_lb ~debug_tokens lb =
   let exception Lexing_error of Lexing.position in
   try
     let ast =
       Parser.main
         (fun lb ->
           match Lexer.token lb with
-          | t -> t
+          | t ->
+              if debug_tokens then Printf.printf "%s\n" (token_to_string t);
+              t
           | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
         lb
     in
@@ -116,7 +140,7 @@ let parse_exp ~fail path =
     In_channel.with_open_bin path (fun ic ->
         let lb = Lexing.from_channel ic in
         Lexing.set_filename lb path;
-        parse_lb lb)
+        parse_lb ~debug_tokens:false lb)
   in
   if fail then report_outcome r;
   r
@@ -195,10 +219,10 @@ end
 module Parse = struct
   let term =
     let open Let_syntax in
-    let+ () = Cmdliner.Term.const () in
+    let+ debug_tokens = Cmdliner.Arg.(value & flag & info [ "debug-tokens" ]) in
     let input = In_channel.input_all In_channel.stdin in
     let lb = Lexing.from_string input in
-    parse_lb lb |> report_outcome ~input
+    parse_lb ~debug_tokens lb |> report_outcome ~input
 
   let info = Cmdliner.Cmd.info "parse"
   let cmd = Cmdliner.Cmd.v info term
