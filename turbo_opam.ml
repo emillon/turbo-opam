@@ -21,13 +21,13 @@ type outcome =
   | Lexing_error of Lexing.position
   | Parse_error of Lexing.position
   | Compile_error of { filename : string; message : string }
-  | Different_result
+  | Different_result of { message : string }
   | Success of OpamFile.OPAM.t
 
 let report_outcome ?input = function
   | Success _ -> ()
-  | Different_result ->
-      Printf.printf "different result\n";
+  | Different_result { message } ->
+      Printf.printf "different result: %s\n" message;
       exit 1
   | Lexing_error pos ->
       Printf.printf "lexing error near:\n";
@@ -41,7 +41,7 @@ let report_outcome ?input = function
       Printf.printf "compile error in %s: %s\n" filename message;
       exit 1
 
-let errorf fmt = Printf.ksprintf Result.error fmt
+let errorf fmt = Format.kasprintf Result.error fmt
 
 let as_string ~context = function
   | Ast.V_string s -> Ok s
@@ -52,7 +52,10 @@ module Result_let_syntax = struct
   let ( let+ ) x f = Result.map f x
 end
 
-let compile sections =
+let compile { Ast.sections; filename } =
+  let pkg =
+    OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
+  in
   List.fold_left
     (fun acc (k, v) ->
       let open Result_let_syntax in
@@ -107,7 +110,7 @@ let compile sections =
       | [ [ "extra-source"; _ ]; [ "src" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-source"; _ ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
       | _ -> errorf "unknown key: %s" (String.concat "." (List.concat k)))
-    (Ok (OpamFile.OPAM.create (OpamPackage.of_string "pkg.no")))
+    (Ok (OpamFile.OPAM.create pkg))
     sections
 
 let token_to_string : Parser.token -> _ = function
@@ -145,22 +148,18 @@ let parse_lb ~debug_tokens lb =
           | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
         lb
     in
-    match compile ast.sections with
+    match compile ast with
     | Ok r -> Success r
     | Error message -> Compile_error { filename = ast.filename; message }
   with
   | Parser.Error -> Parse_error lb.lex_curr_p
   | Lexing_error p -> Lexing_error p
 
-let parse_exp ~fail path =
-  let r =
-    In_channel.with_open_bin path (fun ic ->
-        let lb = Lexing.from_channel ic in
-        Lexing.set_filename lb path;
-        parse_lb ~debug_tokens:false lb)
-  in
-  if fail then report_outcome r;
-  r
+let parse_exp path =
+  In_channel.with_open_bin path (fun ic ->
+      let lb = Lexing.from_channel ic in
+      Lexing.set_filename lb path;
+      parse_lb ~debug_tokens:false lb)
 
 let iter_on_opam_files root ~f =
   let rec go dir =
@@ -201,7 +200,7 @@ module Outcome_type = struct
     | Success _ -> Success
     | Parse_error _ -> Parse_error
     | Compile_error _ -> Compile_error
-    | Different_result -> Different_result
+    | Different_result _ -> Different_result
 end
 
 module Stats = struct
@@ -218,6 +217,76 @@ module Stats = struct
     M.iter (fun o n -> Format.fprintf ppf "%a: %d\n" Outcome_type.pp o n) t
 end
 
+let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
+  let pp_name_opt ppf o =
+    let s =
+      match o with None -> "<none>" | Some p -> OpamPackage.Name.to_string p
+    in
+    Format.pp_print_string ppf s
+  in
+  let pp_version_opt ppf o =
+    let s =
+      match o with
+      | None -> "<none>"
+      | Some p -> OpamPackage.Version.to_string p
+    in
+    Format.pp_print_string ppf s
+  in
+  if a.name <> b.name then
+    errorf "name differs: %a %a" pp_name_opt a.name pp_name_opt b.name
+  else if a.version <> b.version then
+    errorf "version differs: %a %a" pp_version_opt a.version pp_version_opt
+      b.version
+  else Ok ()
+(*
+     OpamFile.OPAM.effective_part
+
+   {
+
+     depends    = t.depends;
+     depopts    = t.depopts;
+     conflicts  = t.conflicts;
+     conflict_class = t.conflict_class;
+     available  = t.available;
+     flags      =
+       (List.filter (function
+            | Pkgflag_LightUninstall
+            | Pkgflag_Verbose
+            | Pkgflag_Plugin
+            | Pkgflag_Compiler
+            | Pkgflag_Conf
+            | Pkgflag_AvoidVersion
+            | Pkgflag_Unknown _
+              -> false)
+           t.flags);
+     env        = t.env;
+
+     build      = t.build;
+     run_test   = t.deprecated_build_test @ t.run_test;
+     install    = t.install;
+     remove     = t.remove;
+
+     substs     = t.substs;
+     patches    = t.patches;
+     build_env  = t.build_env;
+     features   = t.features;
+     extra_sources = t.extra_sources;
+
+     url         =
+       (match t.url with
+        | None -> None
+        | Some u -> match URL.checksum u with
+          | [] -> Some (URL.create (URL.url u)) (* ignore mirrors *)
+          | cksum::_ ->
+            Some (URL.with_checksum [cksum] URL.empty));
+            (* ignore actual url and extra checksums *)
+
+     extra_files = OpamStd.Option.Op.(t.extra_files ++ Some []);
+
+     deprecated_build_doc = t.deprecated_build_doc;
+   }
+*)
+
 module Repo = struct
   let term =
     let open Let_syntax in
@@ -226,20 +295,22 @@ module Repo = struct
     and+ fail = Cmdliner.Arg.(value & flag & info [ "fail" ]) in
     let stats = ref Stats.empty in
     iter_on_opam_files repo_path ~f:(fun path ->
-        let r_exp = parse_exp ~fail path in
+        let r_exp = parse_exp path in
         let r =
           match r_exp with
           | (Lexing_error _ | Compile_error _ | Parse_error _) as r -> r
-          | Different_result -> assert false
-          | Success exp ->
+          | Different_result _ -> assert false
+          | Success exp -> (
               let control =
                 let filename = OpamFile.make (OpamFilename.of_string path) in
                 In_channel.with_open_bin path
                   (OpamFile.OPAM.read_from_channel ~filename)
               in
-              if OpamFile.OPAM.effectively_equal exp control then Success exp
-              else Different_result
+              match compare_opam_files exp control with
+              | Ok () -> Success exp
+              | Error message -> Different_result { message })
         in
+        if fail then report_outcome r;
         stats := Stats.add !stats r;
         if false then print_endline path);
     Format.printf "%a" Stats.pp !stats
