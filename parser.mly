@@ -70,8 +70,10 @@ op:
 | Lt { Lt }
 | Le { Le }
 | Eq { Eq }
+| Neq { Neq }
 
 op2:
 | Eq { Eq2 }
 | Neq { Neq2 }
 | Ge { Ge2 }
+| Lt { Lt2 }

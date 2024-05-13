@@ -79,6 +79,7 @@ let compile sections =
       | [ [ "x-ci-accept-failures" ] ] -> (* TODO set it *) Ok opam
       | [ [ "patches" ] ] -> (* TODO set it *) Ok opam
       | [ [ "post-messages" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "tags" ] ] -> (* TODO set it *) Ok opam
       | [ [ "install" ] ] -> (* TODO set it *) Ok opam
       | [ [ "remove" ] ] -> (* TODO set it *) Ok opam
@@ -86,9 +87,13 @@ let compile sections =
       | [ [ "substs" ] ] -> (* TODO set it *) Ok opam
       | [ [ "available" ] ] -> (* TODO set it *) Ok opam
       | [ [ "run-test" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "version" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "author" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "build-env" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "src" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "mirrors" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "url" ]; [ "archive" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-source"; _ ]; [ "src" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-source"; _ ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
       | _ -> errorf "unknown key: %s" (String.concat "." (List.concat k)))

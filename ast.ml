@@ -1,5 +1,5 @@
-type op = Ge | Lt | Le | Eq | Gt
-type op2 = Eq2 | Neq2 | Ge2
+type op = Ge | Lt | Le | Eq | Gt | Neq
+type op2 = Eq2 | Neq2 | Ge2 | Lt2
 
 type value =
   | V_string of string

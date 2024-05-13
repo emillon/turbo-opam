@@ -31,3 +31,9 @@
   $ turbo-opam parse << EOF
   > available: !x
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [
+  >     "x" {with-test & ocaml:version < "5.2"}
+  > ]
+  > EOF
