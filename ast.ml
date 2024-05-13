@@ -12,4 +12,4 @@ type value =
   | V_or of value * value
   | V_op2 of value * op2 * value
 
-type t = (string list list * value) list
+type t = { sections : (string list list * value) list; filename : string }

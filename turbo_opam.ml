@@ -16,10 +16,11 @@ let highlight (pos : Lexing.position) =
 type outcome =
   | Lexing_error of Lexing.position
   | Parse_error of Lexing.position
-  | Ok
+  | Compile_error of { filename : string; message : string }
+  | Success
 
 let report_outcome = function
-  | Ok -> ()
+  | Success -> ()
   | Lexing_error pos ->
       Printf.printf "lexing error near:\n";
       highlight pos;
@@ -28,6 +29,65 @@ let report_outcome = function
       Printf.printf "parse error in %s near:\n" pos.pos_fname;
       highlight pos;
       exit 1
+  | Compile_error { filename; message } ->
+      Printf.printf "compile error in %s: %s\n" filename message;
+      exit 1
+
+let errorf fmt = Printf.ksprintf Result.error fmt
+
+let as_string ~context = function
+  | Ast.V_string s -> Ok s
+  | _ -> errorf "in %s: not a string" context
+
+module Result_let_syntax = struct
+  let ( let* ) = Result.bind
+  let ( let+ ) x f = Result.map f x
+end
+
+let compile sections =
+  List.fold_left
+    (fun acc (k, v) ->
+      let open Result_let_syntax in
+      let* opam = acc in
+      match k with
+      | [ [ ("opam-version" as context) ] ] -> (
+          let* s = as_string ~context v in
+          match s with "2.0" -> Ok opam | _ -> Error "unknown opam-version")
+      | [ [ "maintainer" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "authors" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "homepage" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "bug-reports" ] ] -> (* TODO set it *) Ok opam
+      | [ [ ("dev-repo" as context) ] ] ->
+          let+ s = as_string ~context v in
+          let url = OpamUrl.of_string s in
+          OpamFile.OPAM.with_dev_repo url opam
+      | [ [ "build" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "depends" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "depopts" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "depexts" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "description" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "extra-files" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "conflicts" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "license" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "patches" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "tags" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "install" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "remove" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "flags" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "substs" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "available" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "run-test" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "url" ]; [ "src" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "url" ]; [ "mirrors" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "url" ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "extra-source"; _ ]; [ "src" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "extra-source"; _ ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
+      | _ -> errorf "unknown key: %s" (String.concat "." (List.concat k)))
+    (Ok (OpamFile.OPAM.create (OpamPackage.of_string "pkg.no")))
+    sections
 
 let parse_exp ~fail path =
   let exception Lexing_error of Lexing.position in
@@ -36,7 +96,7 @@ let parse_exp ~fail path =
         let lb = Lexing.from_channel ic in
         Lexing.set_filename lb path;
         try
-          let _ast =
+          let ast =
             Parser.main
               (fun lb ->
                 match Lexer.token lb with
@@ -44,7 +104,9 @@ let parse_exp ~fail path =
                 | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
               lb
           in
-          Ok
+          match compile ast.sections with
+          | Ok _ -> Success
+          | Error message -> Compile_error { filename = ast.filename; message }
         with
         | Parser.Error -> Parse_error lb.lex_curr_p
         | Lexing_error p -> Lexing_error p)
@@ -70,19 +132,21 @@ let iter_on_opam_files root ~f =
   go root
 
 module Outcome_type = struct
-  type t = Ok | Lexing_error | Parse_error
+  type t = Success | Lexing_error | Parse_error | Compile_error
 
   let pp ppf = function
-    | Ok -> Format.fprintf ppf "Ok"
+    | Success -> Format.fprintf ppf "Success"
     | Lexing_error -> Format.fprintf ppf "Lexing error"
     | Parse_error -> Format.fprintf ppf "Parse error"
+    | Compile_error -> Format.fprintf ppf "Compile error"
 
   let compare = Stdlib.compare
 
   let for_outcome : outcome -> t = function
     | Lexing_error _ -> Lexing_error
-    | Ok -> Ok
+    | Success -> Success
     | Parse_error _ -> Parse_error
+    | Compile_error _ -> Compile_error
 end
 
 module Stats = struct

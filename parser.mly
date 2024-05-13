@@ -27,7 +27,11 @@
 %{ open Ast %}
 %%
 
-main: kvs Eof { $1 }
+main: kvs Eof {
+    let sections=$1 in
+    let filename = $startpos.Lexing.pos_fname in
+    {sections; filename}
+    }
 
 kvs:
 | kv kvs { $1::$2}
