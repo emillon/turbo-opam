@@ -42,19 +42,22 @@ kvs:
 | { [] }
 
 kv:
-| Ident Colon value {[[$1]],$3}
+| Ident Colon value_no_id {[[$1]],$3}
 | Ident Colon filter {[[$1]], V_filter_value $3}
 
 prekv:
 | Ident String { [$1; $2] }
 | Ident { [$1] }
 
-value:
+value_no_id:
 | String { V_string $1 }
 | Lbracket values Rbracket { V_list $2 }
 | value Lbrace filter Rbrace { V_filter ($1, $3) }
-| Ident { V_ident $1 }
 | Lparen value Rparen { $2 }
+
+value:
+| value_no_id { $1 }
+| Ident { V_ident $1 }
 
 values:
 | value values { $1::$2 }
