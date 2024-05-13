@@ -23,3 +23,11 @@
   $ turbo-opam parse << EOF
   > depends: [ "a" | "b" ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > depends: "x" {>= "a" | >= "b"}
+  > EOF
+  parse error in  near:
+  1 | depends: "x" {>= "a" | >= "b"}
+                               ^
+  [1]
