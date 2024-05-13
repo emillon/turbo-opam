@@ -27,3 +27,7 @@
   $ turbo-opam parse << EOF
   > depends: ("a" "b")
   > EOF
+
+  $ turbo-opam parse << EOF
+  > available: !x
+  > EOF

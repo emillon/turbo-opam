@@ -76,7 +76,9 @@ let compile sections =
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "x-ci-accept-failures" ] ] -> (* TODO set it *) Ok opam
       | [ [ "patches" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "post-messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "tags" ] ] -> (* TODO set it *) Ok opam
       | [ [ "install" ] ] -> (* TODO set it *) Ok opam
       | [ [ "remove" ] ] -> (* TODO set it *) Ok opam

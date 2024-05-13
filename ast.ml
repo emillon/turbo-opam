@@ -11,5 +11,6 @@ type value =
   | V_op of op * value
   | V_op2 of value * op2 * value
   | V_and of value * value
+  | V_not of value
 
 type t = { sections : (string list list * value) list; filename : string }

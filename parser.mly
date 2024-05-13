@@ -58,6 +58,7 @@ value:
 | value And value { V_and ($1, $3)}
 | value Or value { V_or ($1, $3)}
 | Ident { V_ident $1 }
+| Not value { V_not $2 }
 
 values:
 | value values { $1::$2 }
