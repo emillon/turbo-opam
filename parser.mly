@@ -41,20 +41,17 @@ prekv:
 | Ident { [$1] }
 
 value: String { V_string $1 }
- | Lbracket values Rbracket { V_list $2 }
- | value Lbrace filter Rbrace { V_filter ($1, $3) }
- | filter { V_formula $1 }
+| Lbracket values Rbracket { V_list $2 }
+| value Lbrace value Rbrace { V_filter ($1, $3) }
+| op value { V_op ($1, $2) }
+| value And value {V_and ($1, $3)}
+| value Or value {V_or ($1, $3)}
+| Ident { V_ident $1 }
+| value op2 value { V_op2 ($1, $2, $3) }
+| Lparen value Rparen { $2 }
 
 values: value values { $1::$2 }
 |  { [] }
-
-filter:
-| op value { F_op ($1, $2) }
-| filter And filter {F_and ($1, $3)}
-| filter Or filter {F_or ($1, $3)}
-| Ident { F_ident $1 }
-| value op2 value { F_op2 ($1, $2, $3) }
-| Lparen filter Rparen { $2 }
 
 op:
 | Ge { Ge }

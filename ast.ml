@@ -6,14 +6,10 @@ type value =
   | V_list of value list
   | V_ident of string
   | V_var of string * string
-  | V_filter of value * filter
-  | V_formula of filter
-
-and filter =
-  | F_op of op * value
-  | F_and of filter * filter
-  | F_or of filter * filter
-  | F_ident of string
-  | F_op2 of value * op2 * value
+  | V_filter of value * value
+  | V_op of op * value
+  | V_and of value * value
+  | V_or of value * value
+  | V_op2 of value * op2 * value
 
 type t = (string list list * value) list
