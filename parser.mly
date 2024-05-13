@@ -40,34 +40,28 @@ kvs:
 | { [] }
 
 kv:
-| Ident Colon value_no_id {[[$1]],$3}
-| Ident Colon filter {[[$1]], V_filter_value $3}
+| Ident Colon value {[[$1]],$3}
 
 prekv:
 | Ident String { [$1; $2] }
 | Ident { [$1] }
 
-value_no_id:
+value:
 | String { V_string $1 }
 | Lbracket values Rbracket { V_list $2 }
-| value Lbrace filter Rbrace { V_filter ($1, $3) }
+| Lparen values Rparen { V_list $2 }
+| value Lbrace value Rbrace { V_filter ($1, $3) }
 | Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
-
-value:
-| value_no_id { $1 }
+| op value { V_op ($1, $2) }
+| value op2 value { V_op2 ($1, $2, $3) }
+| value And value { V_and ($1, $3)}
+| value Or value { V_or ($1, $3)}
 | Ident { V_ident $1 }
 
 values:
 | value values { $1::$2 }
 | { [] }
-
-filter:
-| op value { F_op ($1, $2) }
-| value op2 value { F_op2 ($1, $2, $3) }
-| filter And filter { F_and ($1, $3)}
-| filter Or filter { F_or ($1, $3)}
-| Ident { F_ident $1 }
 
 op:
 | Ge { Ge }

@@ -3,10 +3,6 @@
   >  ("a" {>= "3.0"} "b")
   > ]
   > EOF
-  parse error in  near:
-  2 |  ("a" {>= "3.0"} "b")
-                          ^
-  [1]
 
   $ turbo-opam parse << EOF
   > depends: [ "a" {build & <= "v"} ]
@@ -27,7 +23,7 @@
   $ turbo-opam parse << EOF
   > depends: "x" {>= "a" | >= "b"}
   > EOF
-  parse error in  near:
-  1 | depends: "x" {>= "a" | >= "b"}
-                               ^
-  [1]
+
+  $ turbo-opam parse << EOF
+  > depends: ("a" "b")
+  > EOF
