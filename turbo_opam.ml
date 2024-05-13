@@ -74,6 +74,13 @@ let traverse : ('a, 'e) result list -> ('a list, 'e) result =
 (*type filtered_formula =*)
 (*(name * filter filter_or_constraint OpamFormula.formula) OpamFormula.formula*)
 
+let relop : Ast.op -> _ = function
+  | Ge -> Ok `Geq
+  | Le -> Ok `Leq
+  | Lt -> Ok `Lt
+  | Neq -> Ok `Neq
+  | op -> errorf "relop: %a" Ast.pp_op op
+
 let rec to_filter : Ast.value -> (OpamTypes.filter, string) result =
   let open Result_let_syntax in
   function
@@ -87,7 +94,12 @@ let rec to_filter : Ast.value -> (OpamTypes.filter, string) result =
       let* a = to_filter va in
       let+ b = to_filter vb in
       OpamTypes.FAnd (a, b)
-  | V_op (_, V_string _s) -> Ok (FBool true)
+  | V_op2 (va, op, vb) ->
+      let* a = to_filter va in
+      let* relop = relop op in
+      let+ b = to_filter vb in
+      OpamTypes.FOp (a, relop, b)
+  | V_ident s -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
   | v -> errorf "to_filter: %a" Ast.pp_value v
 
 let rec filter :
@@ -98,16 +110,14 @@ let rec filter :
   let open Result_let_syntax in
   function
   | V_op (op, v) ->
-      let* _relop =
-        match op with
-        | Ge -> Ok `Geq
-        | Le -> Ok `Leq
-        | Lt -> Ok `Lt
-        | _ -> errorf "op: %a" Ast.pp_op op
-      in
+      let* relop = relop op in
       let+ filter = to_filter v in
-      OpamFormula.Atom (OpamTypes.Filter filter)
+      OpamFormula.Atom (OpamTypes.Constraint (relop, filter))
   | V_and (va, vb) -> filters [ va; vb ]
+  | V_or (va, vb) ->
+      let* a = filter va in
+      let+ b = filter vb in
+      OpamFormula.Or (a, b)
   | V_ident s ->
       Ok
         (OpamFormula.Atom

@@ -22,6 +22,7 @@
 %nonassoc PlusEq
 %left Or
 %left And
+%nonassoc below_and
 
 %start<Ast.t> main;
 
@@ -54,8 +55,8 @@ value:
 | value Lbrace values Rbrace { V_filter ($1, $3) }
 | Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
-| op value { V_op ($1, $2) }
-| value op value { V_op2 ($1, $2, $3) }
+| op value { V_op ($1, $2) } %prec below_and
+| value op value { V_op2 ($1, $2, $3) } %prec below_and
 | value env_op value { V_envop ($1, $2, $3) }
 | value And value { V_and ($1, $3)}
 | Ident { V_ident $1 }

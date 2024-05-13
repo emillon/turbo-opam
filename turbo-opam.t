@@ -24,8 +24,7 @@
   > depends: "x" {>= "a" | >= "b"}
   > EOF
   [[depends]]
-  V_filter (V_string "x", [V_op (Ge, V_or (V_string "a", V_op (Ge, V_string "b")))])
-  
+  V_filter (V_string "x", [V_or (V_op (Ge, V_string "a"), V_op (Ge, V_string "b"))])
 
   $ turbo-opam parse << EOF
   > depends: ("a" "b")
@@ -40,3 +39,9 @@
   >     "x" {with-test & ocaml:version < "5.2"}
   > ]
   > EOF
+
+  $ turbo-opam parse --debug-ast << EOF
+  > available: os != "macos" & os-family != "windows"
+  > EOF
+  [[available]]
+  V_and (V_op2 (V_ident "os", Neq, V_string "macos"), V_op2 (V_ident "os-family", Neq, V_string "windows"))
