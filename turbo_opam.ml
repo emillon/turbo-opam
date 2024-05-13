@@ -6,8 +6,12 @@ module Let_syntax = struct
   let ( and+ ) tx ty = const pair $ tx $ ty
 end
 
-let highlight (pos : Lexing.position) =
-  let input = Pp_loc.Input.file pos.pos_fname in
+let highlight ?input (pos : Lexing.position) =
+  let input =
+    match input with
+    | Some s -> Pp_loc.Input.string s
+    | None -> Pp_loc.Input.file pos.pos_fname
+  in
   let ppf = Format.std_formatter in
   let location = Pp_loc.Position.of_lexing pos in
   let locs = [ (location, Pp_loc.Position.shift location 1) ] in
@@ -19,15 +23,15 @@ type outcome =
   | Compile_error of { filename : string; message : string }
   | Success
 
-let report_outcome = function
+let report_outcome ?input = function
   | Success -> ()
   | Lexing_error pos ->
       Printf.printf "lexing error near:\n";
-      highlight pos;
+      highlight ?input pos;
       exit 1
   | Parse_error pos ->
       Printf.printf "parse error in %s near:\n" pos.pos_fname;
-      highlight pos;
+      highlight ?input pos;
       exit 1
   | Compile_error { filename; message } ->
       Printf.printf "compile error in %s: %s\n" filename message;
@@ -89,27 +93,30 @@ let compile sections =
     (Ok (OpamFile.OPAM.create (OpamPackage.of_string "pkg.no")))
     sections
 
-let parse_exp ~fail path =
+let parse_lb lb =
   let exception Lexing_error of Lexing.position in
+  try
+    let ast =
+      Parser.main
+        (fun lb ->
+          match Lexer.token lb with
+          | t -> t
+          | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
+        lb
+    in
+    match compile ast.sections with
+    | Ok _ -> Success
+    | Error message -> Compile_error { filename = ast.filename; message }
+  with
+  | Parser.Error -> Parse_error lb.lex_curr_p
+  | Lexing_error p -> Lexing_error p
+
+let parse_exp ~fail path =
   let r =
     In_channel.with_open_bin path (fun ic ->
         let lb = Lexing.from_channel ic in
         Lexing.set_filename lb path;
-        try
-          let ast =
-            Parser.main
-              (fun lb ->
-                match Lexer.token lb with
-                | t -> t
-                | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
-              lb
-          in
-          match compile ast.sections with
-          | Ok _ -> Success
-          | Error message -> Compile_error { filename = ast.filename; message }
-        with
-        | Parser.Error -> Parse_error lb.lex_curr_p
-        | Lexing_error p -> Lexing_error p)
+        parse_lb lb)
   in
   if fail then report_outcome r;
   r
@@ -163,24 +170,40 @@ module Stats = struct
     M.iter (fun o n -> Format.fprintf ppf "%a: %d\n" Outcome_type.pp o n) t
 end
 
-let term =
-  let open Let_syntax in
-  let+ repo_path = Cmdliner.Arg.(required & pos 0 (some string) None & info [])
-  and+ fail =
-    Cmdliner.Arg.value (Cmdliner.Arg.flag (Cmdliner.Arg.info [ "fail" ]))
-  in
-  let stats = ref Stats.empty in
-  iter_on_opam_files repo_path ~f:(fun path ->
-      (*let _control =*)
-      (*let filename = OpamFile.make (OpamFilename.of_string path) in*)
-      (*In_channel.with_open_bin path*)
-      (*(OpamFile.OPAM.read_from_channel ~filename)*)
-      (*in*)
-      let r_exp = parse_exp ~fail path in
-      stats := Stats.add !stats r_exp;
-      if false then print_endline path);
-  Format.printf "%a" Stats.pp !stats
+module Repo = struct
+  let term =
+    let open Let_syntax in
+    let+ repo_path =
+      Cmdliner.Arg.(required & pos 0 (some string) None & info [])
+    and+ fail = Cmdliner.Arg.(value & flag & info [ "fail" ]) in
+    let stats = ref Stats.empty in
+    iter_on_opam_files repo_path ~f:(fun path ->
+        (*let _control =*)
+        (*let filename = OpamFile.make (OpamFilename.of_string path) in*)
+        (*In_channel.with_open_bin path*)
+        (*(OpamFile.OPAM.read_from_channel ~filename)*)
+        (*in*)
+        let r_exp = parse_exp ~fail path in
+        stats := Stats.add !stats r_exp;
+        if false then print_endline path);
+    Format.printf "%a" Stats.pp !stats
+
+  let info = Cmdliner.Cmd.info "repo"
+  let cmd = Cmdliner.Cmd.v info term
+end
+
+module Parse = struct
+  let term =
+    let open Let_syntax in
+    let+ () = Cmdliner.Term.const () in
+    let input = In_channel.input_all In_channel.stdin in
+    let lb = Lexing.from_string input in
+    parse_lb lb |> report_outcome ~input
+
+  let info = Cmdliner.Cmd.info "parse"
+  let cmd = Cmdliner.Cmd.v info term
+end
 
 let info = Cmdliner.Cmd.info "turbo-opam"
-let cmd = Cmdliner.Cmd.v info term
+let cmd = Cmdliner.Cmd.group info [ Repo.cmd; Parse.cmd ]
 let () = Cmdliner.Cmd.eval cmd |> Stdlib.exit

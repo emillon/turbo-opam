@@ -7,3 +7,6 @@
 
 (menhir
  (modules parser))
+
+(cram
+ (deps %{bin:turbo-opam}))
