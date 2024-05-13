@@ -19,6 +19,7 @@
 %token PlusEq
 %token Eof
 
+%nonassoc PlusEq
 %left Or
 %left And
 
