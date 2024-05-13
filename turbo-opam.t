@@ -19,3 +19,7 @@
   $ turbo-opam parse << EOF
   > depends: "p" { build }
   > EOF
+
+  $ turbo-opam parse << EOF
+  > depends: [ "a" | "b" ]
+  > EOF

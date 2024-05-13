@@ -8,6 +8,7 @@ type value =
   | V_var of string * string
   | V_filter of value * filter
   | V_filter_value of filter
+  | V_or of value * value
 
 and filter =
   | F_op of op * value

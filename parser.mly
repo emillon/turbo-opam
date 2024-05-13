@@ -54,6 +54,7 @@ value_no_id:
 | Lbracket values Rbracket { V_list $2 }
 | value Lbrace filter Rbrace { V_filter ($1, $3) }
 | Lparen value Rparen { $2 }
+| value Or value { V_or ($1, $3)}
 
 value:
 | value_no_id { $1 }
