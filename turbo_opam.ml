@@ -21,10 +21,14 @@ type outcome =
   | Lexing_error of Lexing.position
   | Parse_error of Lexing.position
   | Compile_error of { filename : string; message : string }
-  | Success
+  | Different_result
+  | Success of OpamFile.OPAM.t
 
 let report_outcome ?input = function
-  | Success -> ()
+  | Success _ -> ()
+  | Different_result ->
+      Printf.printf "different result\n";
+      exit 1
   | Lexing_error pos ->
       Printf.printf "lexing error near:\n";
       highlight ?input pos;
@@ -142,7 +146,7 @@ let parse_lb ~debug_tokens lb =
         lb
     in
     match compile ast.sections with
-    | Ok _ -> Success
+    | Ok r -> Success r
     | Error message -> Compile_error { filename = ast.filename; message }
   with
   | Parser.Error -> Parse_error lb.lex_curr_p
@@ -176,21 +180,28 @@ let iter_on_opam_files root ~f =
   go root
 
 module Outcome_type = struct
-  type t = Success | Lexing_error | Parse_error | Compile_error
+  type t =
+    | Success
+    | Lexing_error
+    | Parse_error
+    | Compile_error
+    | Different_result
 
   let pp ppf = function
     | Success -> Format.fprintf ppf "Success"
     | Lexing_error -> Format.fprintf ppf "Lexing error"
     | Parse_error -> Format.fprintf ppf "Parse error"
     | Compile_error -> Format.fprintf ppf "Compile error"
+    | Different_result -> Format.fprintf ppf "Different result"
 
   let compare = Stdlib.compare
 
   let for_outcome : outcome -> t = function
     | Lexing_error _ -> Lexing_error
-    | Success -> Success
+    | Success _ -> Success
     | Parse_error _ -> Parse_error
     | Compile_error _ -> Compile_error
+    | Different_result -> Different_result
 end
 
 module Stats = struct
@@ -215,13 +226,21 @@ module Repo = struct
     and+ fail = Cmdliner.Arg.(value & flag & info [ "fail" ]) in
     let stats = ref Stats.empty in
     iter_on_opam_files repo_path ~f:(fun path ->
-        (*let _control =*)
-        (*let filename = OpamFile.make (OpamFilename.of_string path) in*)
-        (*In_channel.with_open_bin path*)
-        (*(OpamFile.OPAM.read_from_channel ~filename)*)
-        (*in*)
         let r_exp = parse_exp ~fail path in
-        stats := Stats.add !stats r_exp;
+        let r =
+          match r_exp with
+          | (Lexing_error _ | Compile_error _ | Parse_error _) as r -> r
+          | Different_result -> assert false
+          | Success exp ->
+              let control =
+                let filename = OpamFile.make (OpamFilename.of_string path) in
+                In_channel.with_open_bin path
+                  (OpamFile.OPAM.read_from_channel ~filename)
+              in
+              if OpamFile.OPAM.effectively_equal exp control then Success exp
+              else Different_result
+        in
+        stats := Stats.add !stats r;
         if false then print_endline path);
     Format.printf "%a" Stats.pp !stats
 
