@@ -50,7 +50,7 @@ value:
 | String { V_string $1 }
 | Lbracket values Rbracket { V_list $2 }
 | Lparen values Rparen { V_list $2 }
-| value Lbrace value Rbrace { V_filter ($1, $3) }
+| value Lbrace values Rbrace { V_filter ($1, $3) }
 | Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
 | op value { V_op ($1, $2) }
@@ -76,4 +76,7 @@ op2:
 | Eq { Eq2 }
 | Neq { Neq2 }
 | Ge { Ge2 }
+| Gt { Gt2 }
 | Lt { Lt2 }
+| Le { Le2 }
+| PlusEq { PlusEq }

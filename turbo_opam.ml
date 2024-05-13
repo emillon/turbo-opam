@@ -76,6 +76,7 @@ let compile sections =
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "x-opam-monorepo-opam-provided" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-ci-accept-failures" ] ] -> (* TODO set it *) Ok opam
       | [ [ "patches" ] ] -> (* TODO set it *) Ok opam
       | [ [ "post-messages" ] ] -> (* TODO set it *) Ok opam
@@ -90,10 +91,15 @@ let compile sections =
       | [ [ "version" ] ] -> (* TODO set it *) Ok opam
       | [ [ "author" ] ] -> (* TODO set it *) Ok opam
       | [ [ "build-env" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "conflict-class" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "pin-depends" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "setenv" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "name" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "src" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "mirrors" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
       | [ [ "url" ]; [ "archive" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "url" ]; [ "git" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-source"; _ ]; [ "src" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-source"; _ ]; [ "checksum" ] ] -> (* TODO set it *) Ok opam
       | _ -> errorf "unknown key: %s" (String.concat "." (List.concat k)))
