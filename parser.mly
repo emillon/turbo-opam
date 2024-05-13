@@ -43,6 +43,7 @@ kvs:
 
 kv:
 | Ident Colon value {[[$1]],$3}
+| Ident Colon filter {[[$1]], V_filter_value $3}
 
 prekv:
 | Ident String { [$1; $2] }
