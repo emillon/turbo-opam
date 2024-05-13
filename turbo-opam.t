@@ -7,3 +7,7 @@
   2 |  ("a" {>= "3.0"} "b")
                           ^
   [1]
+
+  $ turbo-opam parse << EOF
+  > depends: [ "a" {build & <= "v"} ]
+  > EOF
