@@ -227,7 +227,7 @@ let token_to_string : Parser.token -> _ = function
   | Colon -> "Colon"
   | And -> "And"
 
-let parse_lb ~debug_tokens lb =
+let parse_lb ~debug_tokens ~debug_ast lb =
   let exception Lexing_error of Lexing.position in
   try
     let ast =
@@ -240,6 +240,7 @@ let parse_lb ~debug_tokens lb =
           | exception Failure _ -> raise (Lexing_error lb.lex_curr_p))
         lb
     in
+    if debug_ast then Format.printf "%a\n" Ast.pp ast;
     match compile ast with
     | Ok r -> Success r
     | Error message -> Compile_error { filename = ast.filename; message }
@@ -251,7 +252,7 @@ let parse_exp path =
   In_channel.with_open_bin path (fun ic ->
       let lb = Lexing.from_channel ic in
       Lexing.set_filename lb path;
-      parse_lb ~debug_tokens:false lb)
+      parse_lb ~debug_tokens:false ~debug_ast:false lb)
 
 let iter_on_opam_files root ~f =
   let rec go dir =
@@ -420,11 +421,12 @@ end
 module Parse = struct
   let term =
     let open Let_syntax in
-    let+ debug_tokens = Cmdliner.Arg.(value & flag & info [ "debug-tokens" ]) in
+    let+ debug_tokens = Cmdliner.Arg.(value & flag & info [ "debug-tokens" ])
+    and+ debug_ast = Cmdliner.Arg.(value & flag & info [ "debug-ast" ]) in
     let input = In_channel.input_all In_channel.stdin in
     let lb = Lexing.from_string input in
     Lexing.set_filename lb "stdin.0.opam";
-    parse_lb ~debug_tokens lb |> report_outcome ~input
+    parse_lb ~debug_tokens ~debug_ast lb |> report_outcome ~input
 
   let info = Cmdliner.Cmd.info "parse"
   let cmd = Cmdliner.Cmd.v info term

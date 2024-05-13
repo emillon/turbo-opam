@@ -40,7 +40,7 @@ let rec pp_value ppf = function
   | V_var _ -> Format.fprintf ppf "V_var _"
   | V_filter (v, fs) ->
       Format.fprintf ppf "V_filter (%a, %a)" pp_value v (pp_list pp_value) fs
-  | V_or _ -> Format.fprintf ppf "V_or _"
+  | V_or (a, b) -> Format.fprintf ppf "V_or (%a, %a)" pp_value a pp_value b
   | V_op (op, v) -> Format.fprintf ppf "V_op (%a, %a)" pp_op op pp_value v
   | V_op2 _ -> Format.fprintf ppf "V_op2 _"
   | V_envop _ -> Format.fprintf ppf "V_envop _"
@@ -48,3 +48,11 @@ let rec pp_value ppf = function
   | V_not _ -> Format.fprintf ppf "V_not _"
 
 type t = { sections : (string list list * value) list; filename : string }
+
+let pp ppf { sections; filename = _ } =
+  List.iter
+    (fun (k, v) ->
+      Format.fprintf ppf "%a\n%a\n"
+        (pp_list (pp_list Format.pp_print_string))
+        k pp_value v)
+    sections

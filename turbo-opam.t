@@ -20,9 +20,12 @@
   > depends: [ "a" | "b" ]
   > EOF
 
-  $ turbo-opam parse << EOF
+  $ turbo-opam parse --debug-ast << EOF
   > depends: "x" {>= "a" | >= "b"}
   > EOF
+  [[depends]]
+  V_filter (V_string "x", [V_op (Ge, V_or (V_string "a", V_op (Ge, V_string "b")))])
+  
 
   $ turbo-opam parse << EOF
   > depends: ("a" "b")
