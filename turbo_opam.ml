@@ -52,6 +52,96 @@ module Result_let_syntax = struct
   let ( let+ ) x f = Result.map f x
 end
 
+let traverse : ('a, 'e) result list -> ('a list, 'e) result =
+ fun l ->
+  List.fold_right
+    (fun r acc ->
+      match acc with
+      | Ok xs -> ( match r with Ok x -> Ok (x :: xs) | Error _ as e -> e)
+      | Error _ as e -> e)
+    l (Ok [])
+
+(*type 'a formula =*)
+(*| Empty*)
+(*| Atom of 'a*)
+(*| Block of 'a formula*)
+(*| And of 'a formula * 'a formula*)
+(*| Or of 'a formula * 'a formula*)
+(*type filter =*)
+(*type 'a filter_or_constraint =*)
+(*| Filter of filter*)
+(*| Constraint of (relop * 'a)*)
+(*type filtered_formula =*)
+(*(name * filter filter_or_constraint OpamFormula.formula) OpamFormula.formula*)
+
+let rec to_filter : Ast.value -> (OpamTypes.filter, string) result =
+  let open Result_let_syntax in
+  function
+  (*| _ when true -> Ok (FBool false)*)
+  | V_string s -> Ok (FString s)
+  | V_or (va, vb) ->
+      let* a = to_filter va in
+      let+ b = to_filter vb in
+      OpamTypes.FOr (a, b)
+  | V_and (va, vb) ->
+      let* a = to_filter va in
+      let+ b = to_filter vb in
+      OpamTypes.FAnd (a, b)
+  | V_op (_, V_string _s) -> Ok (FBool true)
+  | v -> errorf "to_filter: %a" Ast.pp_value v
+
+let rec filter :
+    Ast.value ->
+    ( OpamTypes.filter OpamTypes.filter_or_constraint OpamFormula.formula,
+      string )
+    result =
+  let open Result_let_syntax in
+  function
+  | V_op (op, v) ->
+      let* _relop =
+        match op with
+        | Ge -> Ok `Geq
+        | Le -> Ok `Leq
+        | Lt -> Ok `Lt
+        | _ -> errorf "op: %a" Ast.pp_op op
+      in
+      let+ filter = to_filter v in
+      OpamFormula.Atom (OpamTypes.Filter filter)
+  | V_and (va, vb) -> filters [ va; vb ]
+  | V_ident s ->
+      Ok
+        (OpamFormula.Atom
+           (OpamTypes.Filter
+              (OpamTypes.FIdent ([], OpamVariable.of_string s, None))))
+  | v -> errorf "filter: %a" Ast.pp_value v
+
+and filters :
+    Ast.value list ->
+    ( OpamTypes.filter OpamTypes.filter_or_constraint OpamFormula.formula,
+      string )
+    result =
+ fun vs -> List.map filter vs |> traverse |> Result.map OpamFormula.ands
+
+let rec filtered_formula :
+    Ast.value -> (OpamTypes.filtered_formula, string) result =
+  let open Result_let_syntax in
+  function
+  | V_list l ->
+      List.map filtered_formula l |> traverse |> Result.map OpamFormula.ands
+  | V_filter (v, v_filters) ->
+      let* name_s = as_string ~context:"filter" v in
+      let name = OpamPackage.Name.of_string name_s in
+      let+ filters = filters v_filters in
+      OpamFormula.Atom (name, filters)
+  | V_string v ->
+      let name = OpamPackage.Name.of_string v in
+      Ok (OpamFormula.Atom (name, OpamFormula.Empty))
+  | V_or (a, b) ->
+      let* fa = filtered_formula a in
+      let+ fb = filtered_formula b in
+      OpamFormula.Or (fa, fb)
+  | v -> errorf "filtered_formula: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -73,7 +163,9 @@ let compile { Ast.sections; filename } =
           let url = OpamUrl.of_string s in
           OpamFile.OPAM.with_dev_repo url opam
       | [ [ "build" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "depends" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "depends" ] ] ->
+          let+ depends = filtered_formula v in
+          OpamFile.OPAM.with_depends depends opam
       | [ [ "depopts" ] ] -> (* TODO set it *) Ok opam
       | [ [ "depexts" ] ] -> (* TODO set it *) Ok opam
       | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
@@ -232,11 +324,17 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
     in
     Format.pp_print_string ppf s
   in
+  let pp_filtered_formula ppf f =
+    Format.pp_print_string ppf (OpamFilter.string_of_filtered_formula f)
+  in
   if a.name <> b.name then
     errorf "name differs: %a %a" pp_name_opt a.name pp_name_opt b.name
   else if a.version <> b.version then
     errorf "version differs: %a %a" pp_version_opt a.version pp_version_opt
       b.version
+  else if a.depends <> b.depends then
+    errorf "depends differs:\n%a\n%a" pp_filtered_formula a.depends
+      pp_filtered_formula b.depends
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
@@ -325,6 +423,7 @@ module Parse = struct
     let+ debug_tokens = Cmdliner.Arg.(value & flag & info [ "debug-tokens" ]) in
     let input = In_channel.input_all In_channel.stdin in
     let lb = Lexing.from_string input in
+    Lexing.set_filename lb "stdin.0.opam";
     parse_lb ~debug_tokens lb |> report_outcome ~input
 
   let info = Cmdliner.Cmd.info "parse"
