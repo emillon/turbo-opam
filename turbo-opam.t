@@ -59,6 +59,18 @@
   [[available]]
   V_and (V_op2 (V_ident "os", Neq, V_string "macos"), V_op2 (V_ident "os-family", Neq, V_string "windows"))
   
+  $ turbo-opam parse --debug-ast << EOF
+  > depends: "a" {os != "macos" & os-family != "windows"}
+  > EOF
+  [[opam-version]]
+  V_string "2.0"
+  [[depends]]
+  V_filter (V_string "a", [V_ident "os"; V_op (Neq, V_and (V_string "macos", V_op2 (V_ident "os-family", Neq, V_string "windows")))])
+  
+  different result for string.0.opam: depends differs:
+  a {os & != ("macos" & os-family != "windows")}
+  a {os != "macos" & os-family != "windows"}
+  [1]
 
   $ turbo-opam parse << EOF
   > depends: [
