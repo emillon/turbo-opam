@@ -52,13 +52,15 @@
   > EOF
 
   $ turbo-opam parse --debug-ast << EOF
-  > available: os != "macos" & os-family != "windows"
+  > depends: x {a != "b" & c != "d" }
   > EOF
   [[opam-version]]
   V_string "2.0"
-  [[available]]
-  V_and (V_op2 (V_ident "os", Neq, V_string "macos"), V_op2 (V_ident "os-family", Neq, V_string "windows"))
+  [[depends]]
+  V_filter (V_ident "x", [V_ident "a"; V_op (Neq, V_and (V_string "b", V_op2 (V_ident "c", Neq, V_string "d")))])
   
+  compile error in string.0.opam: in filter: not a string
+  [1]
   $ turbo-opam parse --debug-ast << EOF
   > depends: "a" {os != "macos" & os-family != "windows"}
   > EOF
