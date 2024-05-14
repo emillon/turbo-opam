@@ -53,7 +53,7 @@ type t = { sections : (string list list * value) list; filename : string }
 let pp ppf { sections; filename = _ } =
   List.iter
     (fun (k, v) ->
-      Format.fprintf ppf "%a\n%a"
+      Format.fprintf ppf "%a\n%a\n"
         (pp_list (pp_list Format.pp_print_string))
         k pp_value v)
     sections

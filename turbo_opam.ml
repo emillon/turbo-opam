@@ -62,26 +62,26 @@ let parse_lb ~debug_tokens ~debug_ast lb =
   | Parser.Error -> Parse_error lb.lex_curr_p
   | Lexing_error p -> Lexing_error p
 
-let parse_exp ~debug_tokens ~debug_ast path =
-  In_channel.with_open_bin path (fun ic ->
-      let lb = Lexing.from_channel ic in
-      Lexing.set_filename lb path;
-      parse_lb ~debug_tokens ~debug_ast lb)
+let parse_opamfile input =
+  let filename =
+    OpamFile.make (OpamFilename.of_string (Input.filename input))
+  in
+  match input with
+  | Input.File { path } ->
+      In_channel.with_open_bin path (OpamFile.OPAM.read_from_channel ~filename)
+  | String { data } -> OpamFile.OPAM.read_from_string ~filename data
 
-let parse_both ~debug_tokens ~debug_ast path =
-  let r_exp = parse_exp ~debug_tokens ~debug_ast path in
+let parse_both ~debug_tokens ~debug_ast input =
+  let r_exp = Input.with_lexbuf input ~f:(parse_lb ~debug_tokens ~debug_ast) in
   match r_exp with
   | (Lexing_error _ | Compile_error _ | Parse_error _) as r -> r
   | Different_result _ -> assert false
   | Success exp -> (
-      let control =
-        let filename = OpamFile.make (OpamFilename.of_string path) in
-        In_channel.with_open_bin path
-          (OpamFile.OPAM.read_from_channel ~filename)
-      in
+      let control = parse_opamfile input in
       match Compare.compare_opam_files exp control with
       | Ok () -> Success exp
-      | Error message -> Different_result { filename = path; message })
+      | Error message ->
+          Different_result { filename = Input.filename input; message })
 
 let iter_on_opam_files root ~f =
   let rec go dir =
@@ -130,8 +130,9 @@ module Repo = struct
     and+ debug_ast in
     let stats = ref Stats.empty in
     iter_on_opam_files repo_path ~f:(fun path ->
-        let r = parse_both ~debug_tokens ~debug_ast path in
-        if fail then Outcome.report r;
+        let input = Input.File { path } in
+        let r = parse_both ~debug_tokens ~debug_ast input in
+        if fail then Outcome.report ~input r;
         stats := Stats.add !stats r;
         if false then print_endline path);
     Format.printf "%a" Stats.pp !stats
@@ -145,10 +146,10 @@ module Parse = struct
     let open Let_syntax in
     let open Common in
     let+ debug_tokens and+ debug_ast in
-    let input = In_channel.input_all In_channel.stdin in
-    let lb = Lexing.from_string input in
-    Lexing.set_filename lb "stdin.0.opam";
-    parse_lb ~debug_tokens ~debug_ast lb |> Outcome.report ~input
+    let data = In_channel.input_all In_channel.stdin in
+    let data = "opam-version: \"2.0\"\n" ^ data in
+    let input = Input.String { data } in
+    parse_both ~debug_tokens ~debug_ast input |> Outcome.report ~input
 
   let info = Cmdliner.Cmd.info "parse"
   let cmd = Cmdliner.Cmd.v info term
