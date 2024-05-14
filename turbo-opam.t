@@ -45,3 +45,18 @@
   > EOF
   [[available]]
   V_and (V_op2 (V_ident "os", Neq, V_string "macos"), V_op2 (V_ident "os-family", Neq, V_string "windows"))
+
+  $ turbo-opam parse << EOF
+  > depends: [
+  >   "ocaml" {>= "4.05.0"}
+  >   "yojson" {< "2.0.0"}
+  >   "xmlm"
+  >   "ounit" {with-test}
+  >   "lwt"
+  >   "lwt_react"
+  >   "obus" {os != "macos" & os-family != "windows"}
+  >   "ocurl" {>= "0.7.9"}
+  >   "sha" {>= "1.9"}
+  >   "dune" {>= "1.11"}
+  > ]
+  > EOF
