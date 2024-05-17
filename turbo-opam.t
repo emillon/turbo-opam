@@ -179,3 +179,7 @@
   >   [make "all"] {!ocaml:native}
   > ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: ["pkg-config" "libcurl"] {os != "macos"}
+  > EOF
