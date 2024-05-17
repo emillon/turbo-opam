@@ -105,3 +105,9 @@
   $ turbo-opam parse << EOF
   > depends: [ "a" {(>= "0.9.3" | = "0")} ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > depends: [ "a" & "b" ]
+  > EOF
+  compile error in string.0.opam: filtered_formula: V_and (V_string "a", V_string "b")
+  [1]
