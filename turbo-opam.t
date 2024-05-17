@@ -150,5 +150,3 @@
   >   [make "test"] {with-test}
   > ]
   > EOF
-  compile error in string.0.opam: arg: V_string "all"
-  [1]

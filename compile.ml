@@ -96,10 +96,15 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
 
 let arg : OpamTypes.arg decoder = function
   | V_ident s -> Ok (CIdent s, None)
+  | V_string s -> Ok (CString s, None)
   | v -> errorf "arg: %a" Ast.pp_value v
 
-let args : OpamTypes.arg list decoder = function
-  | V_string s -> Ok [ (CString s, None) ]
+let args : OpamTypes.arg list decoder =
+  let open Result_let_syntax in
+  function
+  | V_string _ as v ->
+      let+ arg = arg v in
+      [ arg ]
   | V_list l -> List.map arg l |> traverse
   | v -> errorf "args: %a" Ast.pp_value v
 
