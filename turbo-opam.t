@@ -156,3 +156,7 @@
   >   ["dune" "build" "-p" name "-j" jobs "@install" "@runtest" {with-test}]
   > ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [ "a" ]
+  > EOF

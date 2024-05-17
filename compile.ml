@@ -122,7 +122,7 @@ let command : OpamTypes.command decoder =
   | V_filter (v, [ vf ]) ->
       let+ args = args v and+ filter = to_filter vf in
       (args, Some filter)
-  | V_list _ as v ->
+  | (V_list _ | V_string _) as v ->
       let+ args = args v in
       (args, None)
   | v -> errorf "command: %a" Ast.pp_value v
