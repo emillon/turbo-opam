@@ -32,6 +32,14 @@
   [[depends]]
   V_filter (V_string "x", [V_or (V_op (Ge, V_string "a"), V_op (Ge, V_string "b"))])
   
+  $ turbo-opam parse --debug-ast << EOF
+  > depends: "x" {>= "a" & >= "b"}
+  > EOF
+  [[opam-version]]
+  V_string "2.0"
+  [[depends]]
+  V_filter (V_string "x", [V_and (V_op (Ge, V_string "a"), V_op (Ge, V_string "b"))])
+  
 
   $ turbo-opam parse << EOF
   > depends: ("a" "b")
@@ -57,7 +65,7 @@
   [[opam-version]]
   V_string "2.0"
   [[depends]]
-  V_filter (V_ident "x", [V_ident "a"; V_op (Neq, V_and (V_string "b", V_op2 (V_ident "c", Neq, V_string "d")))])
+  V_filter (V_ident "x", [V_and (V_op2 (V_ident "a", Neq, V_string "b"), V_op2 (V_ident "c", Neq, V_string "d"))])
   
   compile error in string.0.opam: in filter: not a string: V_ident "x"
   [1]
@@ -67,12 +75,8 @@
   [[opam-version]]
   V_string "2.0"
   [[depends]]
-  V_filter (V_string "a", [V_ident "os"; V_op (Neq, V_and (V_string "macos", V_op2 (V_ident "os-family", Neq, V_string "windows")))])
+  V_filter (V_string "a", [V_and (V_op2 (V_ident "os", Neq, V_string "macos"), V_op2 (V_ident "os-family", Neq, V_string "windows"))])
   
-  different result for string.0.opam: depends differs:
-  a {os & != ("macos" & os-family != "windows")}
-  a {os != "macos" & os-family != "windows"}
-  [1]
 
   $ turbo-opam parse << EOF
   > depends: [
@@ -88,7 +92,20 @@
   >   "dune" {>= "1.11"}
   > ]
   > EOF
-  different result for string.0.opam: depends differs:
-  ocaml >= "4.05.0" & yojson < "2.0.0" & xmlm & ounit {with-test} & lwt & lwt_react & obus {os & != ("macos" & os-family != "windows")} & ocurl >= "0.7.9" & sha >= "1.9" & dune >= "1.11"
-  ocaml >= "4.05.0" & yojson < "2.0.0" & xmlm & ounit {with-test} & lwt & lwt_react & obus {os != "macos" & os-family != "windows"} & ocurl >= "0.7.9" & sha >= "1.9" & dune >= "1.11"
-  [1]
+
+  $ turbo-opam parse --debug-ast << EOF
+  > depends: "x" {a & b | c}
+  > EOF
+  [[opam-version]]
+  V_string "2.0"
+  [[depends]]
+  V_filter (V_string "x", [V_or (V_and (V_ident "a", V_ident "b"), V_ident "c")])
+  
+  $ turbo-opam parse --debug-ast << EOF
+  > depends: "x" {a | b & c}
+  > EOF
+  [[opam-version]]
+  V_string "2.0"
+  [[depends]]
+  V_filter (V_string "x", [V_or (V_ident "a", V_and (V_ident "b", V_ident "c"))])
+  

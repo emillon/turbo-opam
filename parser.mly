@@ -19,10 +19,10 @@
 %token PlusEq
 %token Eof
 
-%nonassoc PlusEq
 %left Or
 %left And
-%nonassoc below_and
+%nonassoc binary_op
+%nonassoc prefix_op
 
 %start<Ast.t> main;
 
@@ -49,18 +49,21 @@ prekv:
 | Ident { [$1] }
 
 value:
-| String { V_string $1 }
+| atom { $1 }
 | Lbracket values Rbracket { V_list $2 }
 | Lparen values Rparen { V_list $2 }
 | value Lbrace values Rbrace { V_filter ($1, $3) }
 | Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
-| op value { V_op ($1, $2) } %prec below_and
-| value op value { V_op2 ($1, $2, $3) } %prec below_and
-| value env_op value { V_envop ($1, $2, $3) }
 | value And value { V_and ($1, $3)}
-| Ident { V_ident $1 }
+| op value { V_op ($1, $2) } %prec prefix_op
+| atom op value { V_op2 ($1, $2, $3) } %prec binary_op
+| atom env_op atom { V_envop ($1, $2, $3) }
 | Not value { V_not $2 }
+
+atom:
+| String { V_string $1 }
+| Ident { V_ident $1 }
 
 values:
 | value values { $1::$2 }

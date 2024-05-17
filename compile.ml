@@ -47,6 +47,9 @@ let rec filter :
         (OpamFormula.Atom
            (OpamTypes.Filter
               (OpamTypes.FIdent ([], OpamVariable.of_string s, None))))
+  | V_op2 (a, op, b) ->
+      let+ fa = to_filter a and+ relop = relop op and+ fb = to_filter b in
+      OpamFormula.Atom (OpamTypes.Filter (OpamTypes.FOp (fa, relop, fb)))
   | v -> errorf "filter: %a" Ast.pp_value v
 
 and filters :
