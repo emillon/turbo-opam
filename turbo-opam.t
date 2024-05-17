@@ -137,5 +137,3 @@
   >   "a" {!b | >= "c"}
   > ]
   > EOF
-  compile error in string.0.opam: to_filter: V_op (Ge, V_string "c")
-  [1]

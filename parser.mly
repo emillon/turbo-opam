@@ -21,6 +21,7 @@
 
 %left Or
 %left And
+%nonassoc Not
 
 %start<Ast.t> main;
 
