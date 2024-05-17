@@ -2,7 +2,7 @@ open Util
 
 let as_string ~context = function
   | Ast.V_string s -> Ok s
-  | _ -> errorf "in %s: not a string" context
+  | v -> errorf "in %s: not a string: %a" context Ast.pp_value v
 
 let relop : Ast.op -> _ = function
   | Ge -> Ok `Geq

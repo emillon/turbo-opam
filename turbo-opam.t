@@ -59,7 +59,7 @@
   [[depends]]
   V_filter (V_ident "x", [V_ident "a"; V_op (Neq, V_and (V_string "b", V_op2 (V_ident "c", Neq, V_string "d")))])
   
-  compile error in string.0.opam: in filter: not a string
+  compile error in string.0.opam: in filter: not a string: V_ident "x"
   [1]
   $ turbo-opam parse --debug-ast << EOF
   > depends: "a" {os != "macos" & os-family != "windows"}
