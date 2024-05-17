@@ -109,3 +109,10 @@
   [[depends]]
   V_filter (V_string "x", [V_or (V_ident "a", V_and (V_ident "b", V_ident "c"))])
   
+  $ turbo-opam parse << EOF
+  > depends: [ ("a" "b" ) ]
+  > EOF
+  different result for string.0.opam: depends differs:
+  a & b
+  (a & b)
+  [1]
