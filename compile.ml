@@ -17,7 +17,8 @@ type 'a decoder = Ast.value -> ('a, string) result
 let rec to_filter : OpamTypes.filter decoder =
   let open Result_let_syntax in
   function
-  (*| _ when true -> Ok (FBool false)*)
+  | V_group v -> to_filter v
+  | V_list [v] -> to_filter v
   | V_string s -> Ok (FString s)
   | V_or (va, vb) ->
       let+ a = to_filter va and+ b = to_filter vb in
@@ -55,6 +56,9 @@ let rec filter :
       let+ f = filter v in
       OpamTypes.Block f
   | V_list [ v ] -> filter v
+  | V_not v ->
+      let+ f = to_filter v in
+      OpamFormula.Atom (OpamTypes.Filter (FNot f))
   | v -> errorf "filter: %a" Ast.pp_value v
 
 and filters :
@@ -84,7 +88,7 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
       let* fa = filtered_formula a in
       let+ fb = filtered_formula b in
       OpamFormula.Or (fa, fb)
-  | V_and(a, b) ->
+  | V_and (a, b) ->
       let* fa = filtered_formula a in
       let+ fb = filtered_formula b in
       OpamFormula.And (fa, fb)

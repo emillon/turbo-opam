@@ -47,7 +47,7 @@ let rec pp_value ppf = function
       Format.fprintf ppf "V_op2 (%a, %a, %a)" pp_value a pp_op op pp_value b
   | V_envop _ -> Format.fprintf ppf "V_envop _"
   | V_and (a, b) -> Format.fprintf ppf "V_and (%a, %a)" pp_value a pp_value b
-  | V_not _ -> Format.fprintf ppf "V_not _"
+  | V_not v -> Format.fprintf ppf "V_not (%a)" pp_value v
   | V_group v -> Format.fprintf ppf "V_group (%a)" pp_value v
 
 type t = { sections : (string list list * value) list; filename : string }

@@ -115,10 +115,13 @@
   >   "a" {>= "b" < "c"}
   > ]
   > EOF
+
   $ turbo-opam parse << EOF
   > depends: [
   >   "a" {!(b = "c" & d < "e")}
   > ]
   > EOF
-  compile error in string.0.opam: filter: V_not _
+  different result for string.0.opam: depends differs:
+  a {!(b = "c" & d < "e")}
+  a {(!(b = "c") | !(d < "e"))}
   [1]
