@@ -30,6 +30,9 @@ let rec to_filter : OpamTypes.filter decoder =
       let+ a = to_filter va and+ relop = relop op and+ b = to_filter vb in
       OpamTypes.FOp (a, relop, b)
   | V_ident s -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
+  | V_not v ->
+      let+ f = to_filter v in
+      OpamTypes.FNot f
   | v -> errorf "to_filter: %a" Ast.pp_value v
 
 let rec filter :

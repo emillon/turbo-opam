@@ -172,3 +172,10 @@
   $ turbo-opam parse << EOF
   > build: make
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [
+  >   [make] {ocaml:native}
+  >   [make "all"] {!ocaml:native}
+  > ]
+  > EOF
