@@ -21,8 +21,6 @@
 
 %left Or
 %left And
-%nonassoc binary_op
-%nonassoc prefix_op
 
 %start<Ast.t> main;
 
@@ -55,8 +53,8 @@ value:
 | value Lbrace values Rbrace { V_filter ($1, $3) }
 | value Or value { V_or ($1, $3)}
 | value And value { V_and ($1, $3)}
-| op value { V_op ($1, $2) } %prec prefix_op
-| atom op value { V_op2 ($1, $2, $3) } %prec binary_op
+| op atom { V_op ($1, $2) }
+| atom op atom { V_op2 ($1, $2, $3) }
 | atom env_op atom { V_envop ($1, $2, $3) }
 | Not value { V_not $2 }
 
