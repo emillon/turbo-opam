@@ -109,3 +109,18 @@
   $ turbo-opam parse << EOF
   > depends: [ "a" & "b" ]
   > EOF
+
+  $ turbo-opam parse --debug-ast << EOF
+  > depends: [
+  >   "a" {>= "b" < "c"}
+  > ]
+  > EOF
+  [[opam-version]]
+  V_string "2.0"
+  [[depends]]
+  V_list [V_filter (V_string "a", [V_op (Ge, V_op2 (V_string "b", Lt, V_string "c"))])]
+  
+  different result for string.0.opam: depends differs:
+  a >= ("b" < "c")
+  a {>= "b" & < "c"}
+  [1]

@@ -36,7 +36,7 @@ let pp_list pp ppf l =
 
 let rec pp_value ppf = function
   | V_string s -> Format.fprintf ppf "V_string %S" s
-  | V_list _ -> Format.fprintf ppf "V_list _"
+  | V_list v -> Format.fprintf ppf "V_list %a" (pp_list pp_value) v
   | V_ident s -> Format.fprintf ppf "V_ident %S" s
   | V_var _ -> Format.fprintf ppf "V_var _"
   | V_filter (v, fs) ->
