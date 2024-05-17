@@ -110,13 +110,15 @@
   > depends: [ "a" & "b" ]
   > EOF
 
-  $ turbo-opam parse --debug-ast << EOF
+  $ turbo-opam parse << EOF
   > depends: [
   >   "a" {>= "b" < "c"}
   > ]
   > EOF
-  [[opam-version]]
-  V_string "2.0"
-  [[depends]]
-  V_list [V_filter (V_string "a", [V_op (Ge, V_string "b"); V_op (Lt, V_string "c")])]
-  
+  $ turbo-opam parse << EOF
+  > depends: [
+  >   "a" {!(b = "c" & d < "e")}
+  > ]
+  > EOF
+  compile error in string.0.opam: filter: V_not _
+  [1]
