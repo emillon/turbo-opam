@@ -94,6 +94,22 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
       OpamFormula.And (fa, fb)
   | v -> errorf "filtered_formula: %a" Ast.pp_value v
 
+let args : OpamTypes.arg list decoder = function
+  | V_string s -> Ok [ (CString s, None) ]
+  | v -> errorf "args: %a" Ast.pp_value v
+
+let command : OpamTypes.command decoder =
+  let open Result_let_syntax in
+  function
+  | V_filter (v, [ vf ]) ->
+      let+ args = args v and+ filter = to_filter vf in
+      (args, Some filter)
+  | v -> errorf "command: %a" Ast.pp_value v
+
+let commands : OpamTypes.command list decoder = function
+  | V_list l -> List.map command l |> traverse
+  | v -> errorf "commands: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -114,7 +130,9 @@ let compile { Ast.sections; filename } =
           let+ s = as_string ~context v in
           let url = OpamUrl.of_string s in
           OpamFile.OPAM.with_dev_repo url opam
-      | [ [ "build" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "build" ] ] ->
+          let+ cmds = commands v in
+          OpamFile.OPAM.with_build cmds opam
       | [ [ "depends" ] ] ->
           let+ depends = filtered_formula v in
           OpamFile.OPAM.with_depends depends opam
