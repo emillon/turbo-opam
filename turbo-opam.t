@@ -100,3 +100,8 @@
   V_string "2.0"
   [[depends]]
   V_filter (V_string "x", [V_or (V_ident "a", V_and (V_ident "b", V_ident "c"))])
+  
+
+  $ turbo-opam parse << EOF
+  > depends: [ "a" {(>= "0.9.3" | = "0")} ]
+  > EOF

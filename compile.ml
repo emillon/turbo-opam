@@ -51,6 +51,10 @@ let rec filter :
   | V_op2 (a, op, b) ->
       let+ fa = to_filter a and+ relop = relop op and+ fb = to_filter b in
       OpamFormula.Atom (OpamTypes.Filter (OpamTypes.FOp (fa, relop, fb)))
+  | V_group v ->
+      let+ f = filter v in
+      OpamTypes.Block f
+  | V_list [ v ] -> filter v
   | v -> errorf "filter: %a" Ast.pp_value v
 
 and filters :
