@@ -160,3 +160,7 @@
   $ turbo-opam parse << EOF
   > build: [ "a" ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: ["dune" "build" "-p" name "-j" jobs]
+  > EOF
