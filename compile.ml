@@ -97,23 +97,26 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
       OpamFormula.And (fa, fb)
   | v -> errorf "filtered_formula: %a" Ast.pp_value v
 
+let add_filter arg f =
+  match arg with
+  | _, Some _ -> errorf "add_filter: several filters"
+  | sa, None -> Ok (sa, Some f)
+
 let rec arg : OpamTypes.arg decoder =
   let open Result_let_syntax in
   function
   | V_ident s -> Ok (CIdent s, None)
   | V_string s -> Ok (CString s, None)
-  | V_filter (v, [ vf ]) -> (
+  | V_filter (v, [ vf ]) ->
       let* arg = arg v in
       let* f = to_filter vf in
-      match arg with
-      | _, Some _ -> errorf "arg: several filters"
-      | sa, None -> Ok (sa, Some f))
+      add_filter arg f
   | v -> errorf "arg: %a" Ast.pp_value v
 
 let args : OpamTypes.arg list decoder =
   let open Result_let_syntax in
   function
-  | (V_string _ | V_ident _) as v ->
+  | (V_string _ | V_ident _ | V_filter _) as v ->
       let+ arg = arg v in
       [ arg ]
   | V_list l -> List.map arg l |> traverse
@@ -122,9 +125,12 @@ let args : OpamTypes.arg list decoder =
 let command : OpamTypes.command decoder =
   let open Result_let_syntax in
   function
-  | V_filter (v, [ vf ]) ->
+  | V_filter ((V_list _ as v), [ vf ]) ->
       let+ args = args v and+ filter = to_filter vf in
       (args, Some filter)
+  | V_filter (V_string _, _) as v ->
+      let+ args = args v in
+      (args, None)
   | (V_list _ | V_string _ | V_ident _) as v ->
       let+ args = args v in
       (args, None)

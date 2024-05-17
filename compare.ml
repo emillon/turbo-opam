@@ -1,5 +1,21 @@
 open Util
 
+let pp_simple_arg ppf = function
+  | OpamTypes.CString s -> Format.fprintf ppf "%S" s
+  | OpamTypes.CIdent s -> Format.fprintf ppf "%s" s
+
+let pp_filter_opt ppf = function
+  | None -> ()
+  | Some _ -> Format.fprintf ppf " { _ }"
+
+let pp_arg ppf (sa, filter_o) =
+  Format.fprintf ppf "%a%a" pp_simple_arg sa pp_filter_opt filter_o
+
+let pp_command ppf (args, filter_o) =
+  Format.fprintf ppf "%a%a" (Ast.pp_list pp_arg) args pp_filter_opt filter_o
+
+let pp_commands = Ast.pp_list pp_command
+
 let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   let pp_name_opt ppf o =
     let s =
@@ -26,6 +42,8 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.depends <> b.depends then
     errorf "depends differs:\n%a\n%a" pp_filtered_formula a.depends
       pp_filtered_formula b.depends
+  else if a.build <> b.build then
+    errorf "build differs:\n%a\n%a" pp_commands a.build pp_commands b.build
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
