@@ -131,7 +131,7 @@ let commands : OpamTypes.command list decoder =
   let open Result_let_syntax in
   function
   | V_list l -> List.map command l |> traverse
-  | V_string _ as v ->
+  | (V_string _ | V_ident _) as v ->
       let+ c = command v in
       [ c ]
   | v -> errorf "commands: %a" Ast.pp_value v

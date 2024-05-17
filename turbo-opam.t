@@ -168,3 +168,7 @@
   $ turbo-opam parse << EOF
   > build: "omake"
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: make
+  > EOF
