@@ -94,8 +94,13 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
       OpamFormula.And (fa, fb)
   | v -> errorf "filtered_formula: %a" Ast.pp_value v
 
+let arg : OpamTypes.arg decoder = function
+  | V_ident s -> Ok (CIdent s, None)
+  | v -> errorf "arg: %a" Ast.pp_value v
+
 let args : OpamTypes.arg list decoder = function
   | V_string s -> Ok [ (CString s, None) ]
+  | V_list l -> List.map arg l |> traverse
   | v -> errorf "args: %a" Ast.pp_value v
 
 let command : OpamTypes.command decoder =
@@ -104,6 +109,9 @@ let command : OpamTypes.command decoder =
   | V_filter (v, [ vf ]) ->
       let+ args = args v and+ filter = to_filter vf in
       (args, Some filter)
+  | V_list _ as v ->
+      let+ args = args v in
+      (args, None)
   | v -> errorf "command: %a" Ast.pp_value v
 
 let commands : OpamTypes.command list decoder = function

@@ -137,3 +137,9 @@
   >   "a" {!b | >= "c"}
   > ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [
+  >   [make]
+  > ]
+  > EOF
