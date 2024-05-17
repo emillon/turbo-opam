@@ -63,6 +63,9 @@ and filters :
 let rec filtered_formula : OpamTypes.filtered_formula decoder =
   let open Result_let_syntax in
   function
+  | V_group l ->
+      let+ f = filtered_formula l in
+      OpamFormula.Block f
   | V_list l ->
       List.map filtered_formula l |> traverse |> Result.map OpamFormula.ands
   | V_filter (v, v_filters) ->

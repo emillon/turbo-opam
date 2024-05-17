@@ -51,9 +51,8 @@ prekv:
 value:
 | atom { $1 }
 | Lbracket values Rbracket { V_list $2 }
-| Lparen values Rparen { V_list $2 }
+| Lparen values Rparen { V_group (V_list $2) }
 | value Lbrace values Rbrace { V_filter ($1, $3) }
-| Lparen value Rparen { $2 }
 | value Or value { V_or ($1, $3)}
 | value And value { V_and ($1, $3)}
 | op value { V_op ($1, $2) } %prec prefix_op

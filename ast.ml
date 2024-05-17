@@ -22,6 +22,7 @@ type value =
   | V_envop of value * env_op * value
   | V_and of value * value
   | V_not of value
+  | V_group of value
 
 let pp_list pp ppf l =
   let first = ref true in
@@ -47,6 +48,7 @@ let rec pp_value ppf = function
   | V_envop _ -> Format.fprintf ppf "V_envop _"
   | V_and (a, b) -> Format.fprintf ppf "V_and (%a, %a)" pp_value a pp_value b
   | V_not _ -> Format.fprintf ppf "V_not _"
+  | V_group v -> Format.fprintf ppf "V_group (%a)" pp_value v
 
 type t = { sections : (string list list * value) list; filename : string }
 
