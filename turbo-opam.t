@@ -164,3 +164,7 @@
   $ turbo-opam parse << EOF
   > build: ["dune" "build" "-p" name "-j" jobs]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: "omake"
+  > EOF
