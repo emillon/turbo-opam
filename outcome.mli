@@ -5,4 +5,4 @@ type t =
   | Different_result of { filename : string; message : string }
   | Success of OpamFile.OPAM.t
 
-val report : input:Input.t -> t -> unit
+val report : input:Input.t -> fatal:bool -> t -> unit

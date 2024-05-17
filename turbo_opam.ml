@@ -147,7 +147,8 @@ module Repo = struct
     let open Common in
     let+ repo_path =
       Cmdliner.Arg.(required & pos 0 (some string) None & info [])
-    and+ fail = Cmdliner.Arg.(value & flag & info [ "fail" ])
+    and+ show_failure = Cmdliner.Arg.(value & flag & info [ "show" ])
+    and+ stop = Cmdliner.Arg.(value & flag & info [ "stop" ])
     and+ debug_tokens
     and+ debug_ast
     and+ off = Cmdliner.Arg.(value & flag & info [ "off" ]) in
@@ -158,7 +159,7 @@ module Repo = struct
           if off then parse_both_off input
           else parse_both ~debug_tokens ~debug_ast input
         in
-        if fail then Outcome.report ~input r;
+        if show_failure then Outcome.report ~fatal:stop ~input r;
         stats := Stats.add !stats r;
         if false then print_endline path);
     Format.printf "%a" Stats.pp !stats
@@ -175,7 +176,8 @@ module Parse = struct
     let data = In_channel.input_all In_channel.stdin in
     let data = "opam-version: \"2.0\"\n" ^ data in
     let input = Input.String { data } in
-    parse_both ~debug_tokens ~debug_ast input |> Outcome.report ~input
+    parse_both ~debug_tokens ~debug_ast input
+    |> Outcome.report ~input ~fatal:true
 
   let info = Cmdliner.Cmd.info "parse"
   let cmd = Cmdliner.Cmd.v info term

@@ -18,7 +18,7 @@ let rec to_filter : OpamTypes.filter decoder =
   let open Result_let_syntax in
   function
   | V_group v -> to_filter v
-  | V_list [v] -> to_filter v
+  | V_list [ v ] -> to_filter v
   | V_string s -> Ok (FString s)
   | V_or (va, vb) ->
       let+ a = to_filter va and+ b = to_filter vb in

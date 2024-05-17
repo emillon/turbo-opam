@@ -17,19 +17,21 @@ let highlight ~input (pos : Lexing.position) =
   let locs = [ (location, Pp_loc.Position.shift location 1) ] in
   Pp_loc.pp ~input:pp_input ppf locs
 
-let report ~input = function
+let report ~input ~fatal t =
+  let error () = if fatal then exit 1 in
+  match t with
   | Success _ -> ()
   | Different_result { filename; message } ->
       Printf.printf "different result for %s: %s\n" filename message;
-      exit 1
+      error ()
   | Lexing_error pos ->
       Printf.printf "lexing error near:\n";
       highlight ~input pos;
-      exit 1
+      error ()
   | Parse_error pos ->
       Printf.printf "parse error in %s near:\n" pos.pos_fname;
       highlight ~input pos;
-      exit 1
+      error ()
   | Compile_error { filename; message } ->
       Printf.printf "compile error in %s: %s\n" filename message;
-      exit 1
+      error ()
