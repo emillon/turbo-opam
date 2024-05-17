@@ -83,6 +83,28 @@ let parse_both ~debug_tokens ~debug_ast input =
       | Error message ->
           Different_result { filename = Input.filename input; message })
 
+let parse_lb_off input =
+  let filename = Input.filename input in
+  let[@alert "-deprecated"] opamfile =
+    match input with
+    | Input.File { path } -> OpamParser.file path
+    | String { data } -> OpamParser.string data filename
+  in
+  match Compile_off.compile opamfile with
+  | Ok x -> Outcome.Success x
+  | Error s -> Compile_error { filename; message = s }
+
+let parse_both_off input =
+  let r_exp = parse_lb_off input in
+  let control = parse_opamfile input in
+  match r_exp with
+  | (Outcome.Lexing_error _ | Compile_error _ | Parse_error _) as r -> r
+  | Outcome.Different_result _ -> assert false
+  | Outcome.Success exp ->
+      if OpamFile.OPAM.effectively_equal exp control then Success exp
+      else
+        Different_result { filename = Input.filename input; message = "differ" }
+
 let iter_on_opam_files root ~f =
   let rec go dir =
     let contents =
@@ -127,11 +149,15 @@ module Repo = struct
       Cmdliner.Arg.(required & pos 0 (some string) None & info [])
     and+ fail = Cmdliner.Arg.(value & flag & info [ "fail" ])
     and+ debug_tokens
-    and+ debug_ast in
+    and+ debug_ast
+    and+ off = Cmdliner.Arg.(value & flag & info [ "off" ]) in
     let stats = ref Stats.empty in
     iter_on_opam_files repo_path ~f:(fun path ->
         let input = Input.File { path } in
-        let r = parse_both ~debug_tokens ~debug_ast input in
+        let r =
+          if off then parse_both_off input
+          else parse_both ~debug_tokens ~debug_ast input
+        in
         if fail then Outcome.report ~input r;
         stats := Stats.add !stats r;
         if false then print_endline path);
