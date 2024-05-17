@@ -109,5 +109,3 @@
   $ turbo-opam parse << EOF
   > depends: [ "a" & "b" ]
   > EOF
-  compile error in string.0.opam: filtered_formula: V_and (V_string "a", V_string "b")
-  [1]

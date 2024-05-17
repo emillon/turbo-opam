@@ -84,6 +84,10 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
       let* fa = filtered_formula a in
       let+ fb = filtered_formula b in
       OpamFormula.Or (fa, fb)
+  | V_and(a, b) ->
+      let* fa = filtered_formula a in
+      let+ fb = filtered_formula b in
+      OpamFormula.And (fa, fb)
   | v -> errorf "filtered_formula: %a" Ast.pp_value v
 
 let compile { Ast.sections; filename } =
