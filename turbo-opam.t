@@ -150,3 +150,9 @@
   >   [make "test"] {with-test}
   > ]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [
+  >   ["dune" "build" "-p" name "-j" jobs "@install" "@runtest" {with-test}]
+  > ]
+  > EOF
