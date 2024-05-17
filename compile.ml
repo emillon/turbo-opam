@@ -9,7 +9,8 @@ let relop : Ast.op -> _ = function
   | Le -> Ok `Leq
   | Lt -> Ok `Lt
   | Neq -> Ok `Neq
-  | op -> errorf "relop: %a" Ast.pp_op op
+  | Eq -> Ok `Eq
+  | Gt -> Ok `Gt
 
 type 'a decoder = Ast.value -> ('a, string) result
 
