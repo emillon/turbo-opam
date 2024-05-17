@@ -55,7 +55,7 @@ let rec filter :
   | V_group v ->
       let+ f = filter v in
       OpamTypes.Block f
-  | V_list [ v ] -> filter v
+  | V_list l -> filters l
   | V_not v ->
       let+ f = to_filter v in
       OpamFormula.Atom (OpamTypes.Filter (FNot f))

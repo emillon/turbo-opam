@@ -131,5 +131,3 @@
   >   "a" { ((>= "b" < "c") | (= "d")) }
   > ]
   > EOF
-  compile error in string.0.opam: filter: V_list [V_op (Ge, V_string "b"); V_op (Lt, V_string "c")]
-  [1]
