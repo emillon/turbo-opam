@@ -53,3 +53,7 @@
   $ turbo-opam parse << EOF
   > build: [make "all"]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: []
+  > EOF
