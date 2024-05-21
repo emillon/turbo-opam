@@ -57,3 +57,10 @@
   $ turbo-opam parse << EOF
   > build: []
   > EOF
+
+  $ turbo-opam parse << 'EOF'
+  > build: [
+  >   [ "sh" "-ecx" "sed -e 's_@@ez-conf-lib:lib@@_%{_:lib}%_g' \
+  >                      ez-conf-lib.config.in > ez-conf-lib.config" ]
+  > ]
+  > EOF

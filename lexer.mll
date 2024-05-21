@@ -34,7 +34,12 @@ and string buf = parse
     | '"' { String (Buffer.contents buf) }
     | "\\\"" { Buffer.add_char buf '\"'; string buf lexbuf }
     | "\\\\" { Buffer.add_char buf '\\'; string buf lexbuf }
+    | '\\' '\n' { Lexing.new_line lexbuf; string_spaces buf lexbuf }
     | '\n' { Lexing.new_line lexbuf; string buf lexbuf }
+    | _ as c { Buffer.add_char buf c; string buf lexbuf }
+
+and string_spaces buf = parse
+    | space { string_spaces buf lexbuf }
     | _ as c { Buffer.add_char buf c; string buf lexbuf }
 
 and triple_string buf = parse
