@@ -31,6 +31,8 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.run_test <> b.run_test then
     errorf "run-test differs:\n%a\n%a" Pp.commands a.run_test Pp.commands
       b.run_test
+  else if a.remove <> b.remove then
+    errorf "remove differs:\n%a\n%a" Pp.commands a.remove Pp.commands b.remove
   else if a.conflicts <> b.conflicts then
     errorf "conflicts differs:\n%a\n%a" Pp.filtered_formula a.conflicts
       Pp.filtered_formula b.conflicts
@@ -59,8 +61,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
    {
 
      env        = t.env;
-
-     remove     = t.remove;
 
      substs     = t.substs;
      build_env  = t.build_env;
