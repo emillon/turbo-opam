@@ -40,6 +40,9 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.install <> b.install then
     errorf "install differs:\n%a\n%a" Pp.commands a.install Pp.commands
       b.install
+  else if a.patches <> b.patches then
+    errorf "patches differs:\n%a\n%a" (Pp.list Pp.patch) a.patches
+      (Pp.list Pp.patch) b.patches
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
@@ -52,7 +55,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
      remove     = t.remove;
 
      substs     = t.substs;
-     patches    = t.patches;
      build_env  = t.build_env;
      features   = t.features;
      extra_sources = t.extra_sources;

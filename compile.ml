@@ -203,6 +203,24 @@ let conflict_class : OpamPackage.Name.t list decoder = function
   | V_string s -> Ok [ OpamPackage.Name.of_string s ]
   | v -> errorf "conflict_class: %a" Ast.pp_value v
 
+let patch : (OpamFilename.Base.t * OpamTypes.filter option) decoder =
+  let open Result_let_syntax in
+  function
+  | V_string s -> Ok (OpamFilename.Base.of_string s, None)
+  | V_filter (V_string s, [ f ]) ->
+      let+ f = to_filter f in
+      (OpamFilename.Base.of_string s, Some f)
+  | v -> errorf "patch: %a" Ast.pp_value v
+
+let patches : (OpamFilename.Base.t * OpamTypes.filter option) list decoder =
+  let open Result_let_syntax in
+  function
+  | V_list l -> map_m ~f:patch l
+  | (V_string _ | V_filter _) as v ->
+      let+ p = patch v in
+      [ p ]
+  | v -> errorf "patches: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -248,12 +266,14 @@ let compile { Ast.sections; filename } =
       | [ [ "conflict-class" ] ] ->
           let+ cc = conflict_class v in
           OpamFile.OPAM.with_conflict_class cc opam
+      | [ [ "patches" ] ] ->
+          let+ patches = patches v in
+          OpamFile.OPAM.with_patches patches opam
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-opam-monorepo-opam-provided" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-ci-accept-failures" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "patches" ] ] -> (* TODO set it *) Ok opam
       | [ [ "post-messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "tags" ] ] -> (* TODO set it *) Ok opam

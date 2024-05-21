@@ -1,5 +1,7 @@
+let string = Format.pp_print_string
+
 let filtered_formula ppf f =
-  Format.pp_print_string ppf (OpamFilter.string_of_filtered_formula f)
+  string ppf (OpamFilter.string_of_filtered_formula f)
 
 let list pp ppf l =
   let first = ref true in
@@ -55,3 +57,5 @@ let command ppf (args, filter_o) =
   Format.fprintf ppf "%a%a" (list arg) args filter_opt filter_o
 
 let commands = list command
+let basename ppf x = Format.fprintf ppf "%s" (OpamFilename.Base.to_string x)
+let patch = pair basename (option filter)

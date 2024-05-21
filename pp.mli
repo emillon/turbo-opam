@@ -5,3 +5,4 @@ val filtered_formula : OpamTypes.filtered_formula t
 val commands : OpamTypes.command list t
 val filter : OpamTypes.filter t
 val name : OpamPackage.Name.t t
+val patch : (OpamFilename.Base.t * OpamTypes.filter option) t
