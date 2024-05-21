@@ -139,30 +139,37 @@ end
 module Common = struct
   let debug_tokens = Cmdliner.Arg.(value & flag & info [ "debug-tokens" ])
   let debug_ast = Cmdliner.Arg.(value & flag & info [ "debug-ast" ])
+  let repo_path = Cmdliner.Arg.(required & pos 0 (some string) None & info [])
 end
+
+let get_stats repo_path ~f =
+  let stats = ref Stats.empty in
+  iter_on_opam_files repo_path ~f:(fun path ->
+      let input = Input.File { path } in
+      let r = f input in
+      stats := Stats.add !stats r);
+  !stats
 
 module Repo = struct
   let term =
     let open Let_syntax in
     let open Common in
-    let+ repo_path =
-      Cmdliner.Arg.(required & pos 0 (some string) None & info [])
+    let+ repo_path
     and+ show_failure = Cmdliner.Arg.(value & flag & info [ "show" ])
     and+ stop = Cmdliner.Arg.(value & flag & info [ "stop" ])
     and+ debug_tokens
     and+ debug_ast
     and+ off = Cmdliner.Arg.(value & flag & info [ "off" ]) in
-    let stats = ref Stats.empty in
-    iter_on_opam_files repo_path ~f:(fun path ->
-        let input = Input.File { path } in
-        let r =
-          if off then parse_both_off input
-          else parse_both ~debug_tokens ~debug_ast input
-        in
-        if show_failure then Outcome.report ~fatal:stop ~input r;
-        stats := Stats.add !stats r;
-        if false then print_endline path);
-    Format.printf "%a" Stats.pp !stats
+    let stats =
+      get_stats repo_path ~f:(fun input ->
+          let r =
+            if off then parse_both_off input
+            else parse_both ~debug_tokens ~debug_ast input
+          in
+          if show_failure then Outcome.report ~fatal:stop ~input r;
+          r)
+    in
+    Format.printf "%a" Stats.pp stats
 
   let info = Cmdliner.Cmd.info "repo"
   let cmd = Cmdliner.Cmd.v info term
@@ -183,6 +190,35 @@ module Parse = struct
   let cmd = Cmdliner.Cmd.v info term
 end
 
+module Bench = struct
+  type parser = Control | Experiment
+
+  let term =
+    let open Let_syntax in
+    let open Common in
+    let+ repo_path
+    and+ parser =
+      Cmdliner.Arg.(
+        required
+        & opt
+            (some & enum [ ("control", Control); ("experiment", Experiment) ])
+            None
+        & info [ "parser" ])
+    in
+    let stats =
+      get_stats repo_path ~f:(fun input ->
+          match parser with
+          | Control -> Success (parse_opamfile input)
+          | Experiment ->
+              Input.with_lexbuf input
+                ~f:(parse_lb ~debug_tokens:false ~debug_ast:false))
+    in
+    Format.printf "%a" Stats.pp stats
+
+  let info = Cmdliner.Cmd.info "bench"
+  let cmd = Cmdliner.Cmd.v info term
+end
+
 let info = Cmdliner.Cmd.info "turbo-opam"
-let cmd = Cmdliner.Cmd.group info [ Repo.cmd; Parse.cmd ]
+let cmd = Cmdliner.Cmd.group info [ Repo.cmd; Parse.cmd; Bench.cmd ]
 let () = Cmdliner.Cmd.eval cmd |> Stdlib.exit
