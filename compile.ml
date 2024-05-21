@@ -199,6 +199,10 @@ let commands : OpamTypes.command list decoder =
   | V_list l -> map_m ~f:command l
   | v -> errorf "commands: %a" Ast.pp_value v
 
+let conflict_class : OpamPackage.Name.t list decoder = function
+  | V_string s -> Ok [ OpamPackage.Name.of_string s ]
+  | v -> errorf "conflict_class: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -238,6 +242,9 @@ let compile { Ast.sections; filename } =
       | [ [ "available" ] ] ->
           let+ available = to_filter v in
           OpamFile.OPAM.with_available available opam
+      | [ [ "conflict-class" ] ] ->
+          let+ cc = conflict_class v in
+          OpamFile.OPAM.with_conflict_class cc opam
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
@@ -255,7 +262,6 @@ let compile { Ast.sections; filename } =
       | [ [ "version" ] ] -> (* TODO set it *) Ok opam
       | [ [ "author" ] ] -> (* TODO set it *) Ok opam
       | [ [ "build-env" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "conflict-class" ] ] -> (* TODO set it *) Ok opam
       | [ [ "pin-depends" ] ] -> (* TODO set it *) Ok opam
       | [ [ "setenv" ] ] -> (* TODO set it *) Ok opam
       | [ [ "name" ] ] -> (* TODO set it *) Ok opam

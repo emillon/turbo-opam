@@ -34,13 +34,15 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.available <> b.available then
     errorf "available differs:\n%a\n%a" Pp.filter a.available Pp.filter
       b.available
+  else if a.conflict_class <> b.conflict_class then
+    errorf "conflict-class differs:\n%a\n%a" (Pp.list Pp.name) a.conflict_class
+      (Pp.list Pp.name) b.conflict_class
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
 
    {
 
-     conflict_class = t.conflict_class;
      flags      =
        (List.filter (function
             | Pkgflag_LightUninstall

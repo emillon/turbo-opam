@@ -4,3 +4,4 @@ val list : 'a t -> 'a list t
 val filtered_formula : OpamTypes.filtered_formula t
 val commands : OpamTypes.command list t
 val filter : OpamTypes.filter t
+val name : OpamPackage.Name.t t
