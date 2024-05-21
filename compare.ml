@@ -28,6 +28,9 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
       Pp.filtered_formula b.depopts
   else if a.build <> b.build then
     errorf "build differs:\n%a\n%a" Pp.commands a.build Pp.commands b.build
+  else if a.run_test <> b.run_test then
+    errorf "run-test differs:\n%a\n%a" Pp.commands a.run_test Pp.commands
+      b.run_test
   else if a.conflicts <> b.conflicts then
     errorf "conflicts differs:\n%a\n%a" Pp.filtered_formula a.conflicts
       Pp.filtered_formula b.conflicts
@@ -51,7 +54,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
 
      env        = t.env;
 
-     run_test   = t.deprecated_build_test @ t.run_test;
      remove     = t.remove;
 
      substs     = t.substs;
