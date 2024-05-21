@@ -80,7 +80,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
 
    {
 
-     depends    = t.depends;
      depopts    = t.depopts;
      conflicts  = t.conflicts;
      conflict_class = t.conflict_class;
@@ -98,7 +97,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
            t.flags);
      env        = t.env;
 
-     build      = t.build;
      run_test   = t.deprecated_build_test @ t.run_test;
      install    = t.install;
      remove     = t.remove;
