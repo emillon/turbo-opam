@@ -29,13 +29,13 @@ let ident ppf (name_opt_list, v, string_string_opt) =
 let relop ppf op = Format.fprintf ppf "%s" (OpamPrinter.FullPos.relop_kind op)
 
 let rec filter ppf = function
-  | OpamTypes.FBool _ -> Format.fprintf ppf "FBool _"
-  | FString _ -> Format.fprintf ppf "FString _"
+  | OpamTypes.FBool b -> Format.fprintf ppf "FBool %b" b
+  | FString s -> Format.fprintf ppf "FString %S" s
   | FIdent i -> Format.fprintf ppf "FIdent %a" ident i
   | FOp (a, op, b) ->
       Format.fprintf ppf "FOp (%a, %a, %a)" filter a relop op filter b
   | FAnd (a, b) -> Format.fprintf ppf "FAnd (%a, %a)" filter a filter b
-  | FOr _ -> Format.fprintf ppf "FOr _"
+  | FOr (a, b) -> Format.fprintf ppf "FOr (%a, %a)" filter a filter b
   | FNot _ -> Format.fprintf ppf "FNot _"
   | FDefined _ -> Format.fprintf ppf "FDefined _"
   | FUndef _ -> Format.fprintf ppf "FUndef _"

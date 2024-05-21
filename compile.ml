@@ -24,6 +24,8 @@ let neg_op = function
 
 let fident_of_string s =
   match String.split_on_char ':' s with
+  | [ "false" ] -> Ok (OpamTypes.FBool false)
+  | [ "true" ] -> Ok (OpamTypes.FBool true)
   | [ s ] -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
   | [ pre; s ] ->
       Ok
@@ -32,6 +34,14 @@ let fident_of_string s =
              OpamVariable.of_string s,
              None ))
   | l -> errorf "fident_of_string: %a" (Pp.list Format.pp_print_string) l
+
+let string_op = function
+  | Ast.V_string _ as v -> Ok v
+  | V_ident s as v -> (
+      match Stdlib.int_of_string_opt s with
+      | Some n -> Ok (V_string (Stdlib.string_of_int n))
+      | None -> Ok v)
+  | v -> errorf "string_op: %a" Ast.pp_value v
 
 let rec to_filter : OpamTypes.filter decoder =
   let open Result_let_syntax in
@@ -46,6 +56,8 @@ let rec to_filter : OpamTypes.filter decoder =
       let+ a = to_filter va and+ b = to_filter vb in
       OpamTypes.FAnd (a, b)
   | V_op2 (va, op, vb) ->
+      let* va = string_op va in
+      let* vb = string_op vb in
       let+ a = to_filter va and+ relop = relop op and+ b = to_filter vb in
       OpamTypes.FOp (a, relop, b)
   | V_ident s -> fident_of_string s
