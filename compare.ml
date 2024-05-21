@@ -58,7 +58,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
 
      substs     = t.substs;
      build_env  = t.build_env;
-     features   = t.features;
      extra_sources = t.extra_sources;
 
      url         =
@@ -72,6 +71,5 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
 
      extra_files = OpamStd.Option.Op.(t.extra_files ++ Some []);
 
-     deprecated_build_doc = t.deprecated_build_doc;
    }
 *)
