@@ -4,7 +4,7 @@
   > ]
   > EOF
   different result for string.0.opam: build differs:
-  [["x" { FAnd (FIdent ([], with-test, None), FOp (FIdent ([], ocaml:ocaml:version, None), <, FString _)) }]]
+  [["x" { FAnd (FIdent ([], with-test, None), FOp (FIdent ([], ocaml:version, None), <, FString _)) }]]
   [["x" { FAnd (FIdent ([], with-test, None), FOp (FIdent ([Some (ocaml)], version, None), <, FString _)) }]]
   [1]
 
@@ -54,7 +54,7 @@
   > ]
   > EOF
   different result for string.0.opam: build differs:
-  [[make] { FIdent ([], ocaml:ocaml:native, None) }; [make; "all"] { FNot _ }]
+  [[make] { FIdent ([], ocaml:native, None) }; [make; "all"] { FNot _ }]
   [[make] { FIdent ([Some (ocaml)], native, None) }; [make; "all"] { FNot _ }]
   [1]
 
