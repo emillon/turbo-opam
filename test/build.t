@@ -3,10 +3,6 @@
   >     "x" {with-test & ocaml:version < "5.2"}
   > ]
   > EOF
-  different result for string.0.opam: build differs:
-  [["x" { FAnd (FIdent ([], with-test, None), FOp (FIdent ([], ocaml:version, None), <, FString _)) }]]
-  [["x" { FAnd (FIdent ([], with-test, None), FOp (FIdent ([Some (ocaml)], version, None), <, FString _)) }]]
-  [1]
 
   $ turbo-opam parse << EOF
   > build: [
@@ -53,10 +49,6 @@
   >   [make "all"] {!ocaml:native}
   > ]
   > EOF
-  different result for string.0.opam: build differs:
-  [[make] { FIdent ([], ocaml:native, None) }; [make; "all"] { FNot _ }]
-  [[make] { FIdent ([Some (ocaml)], native, None) }; [make; "all"] { FNot _ }]
-  [1]
 
   $ turbo-opam parse << EOF
   > build: ["pkg-config" "libcurl"] {os != "macos"}

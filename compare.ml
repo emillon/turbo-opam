@@ -10,14 +10,13 @@ let pp_opt pp ppf = function
 
 let pp_name ppf x = Format.fprintf ppf "%s" (OpamPackage.Name.to_string x)
 let pp_pair pp_a pp_b ppf (a, b) = Format.fprintf ppf "(%a, %a)" pp_a a pp_b b
-let pp_string = Format.pp_print_string
 let pp_var ppf var = Format.fprintf ppf "%s" (OpamVariable.to_string var)
 
 let pp_ident ppf (name_opt_list, var, string_string_opt) =
   Format.fprintf ppf "(%a, %a, %a)"
     (Ast.pp_list (pp_opt pp_name))
     name_opt_list pp_var var
-    (pp_opt (pp_pair pp_string pp_string))
+    (pp_opt (pp_pair Format.pp_print_string Format.pp_print_string))
     string_string_opt
 
 let pp_relop ppf op =

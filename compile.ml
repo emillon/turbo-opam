@@ -14,6 +14,17 @@ let relop : Ast.op -> _ = function
 
 type 'a decoder = Ast.value -> ('a, string) result
 
+let fident_of_string s =
+  match String.split_on_char ':' s with
+  | [ s ] -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
+  | [ pre; s ] ->
+      Ok
+        (FIdent
+           ( [ Some (OpamPackage.Name.of_string pre) ],
+             OpamVariable.of_string s,
+             None ))
+  | l -> errorf "fident_of_string: %a" (Ast.pp_list Format.pp_print_string) l
+
 let rec to_filter : OpamTypes.filter decoder =
   let open Result_let_syntax in
   function
@@ -29,7 +40,7 @@ let rec to_filter : OpamTypes.filter decoder =
   | V_op2 (va, op, vb) ->
       let+ a = to_filter va and+ relop = relop op and+ b = to_filter vb in
       OpamTypes.FOp (a, relop, b)
-  | V_ident s -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
+  | V_ident s -> fident_of_string s
   | V_not v ->
       let+ f = to_filter v in
       OpamTypes.FNot f
@@ -39,29 +50,29 @@ let rec filter :
     OpamTypes.filter OpamTypes.filter_or_constraint OpamFormula.formula decoder
     =
   let open Result_let_syntax in
+  let atom x = OpamFormula.Atom x in
+  let atom_filter x = atom (OpamTypes.Filter x) in
   function
   | V_op (op, v) ->
       let+ relop = relop op and+ filter = to_filter v in
-      OpamFormula.Atom (OpamTypes.Constraint (relop, filter))
+      atom (OpamTypes.Constraint (relop, filter))
   | V_and (va, vb) -> filters [ va; vb ]
   | V_or (va, vb) ->
       let+ a = filter va and+ b = filter vb in
       OpamFormula.Or (a, b)
   | V_ident s ->
-      Ok
-        (OpamFormula.Atom
-           (OpamTypes.Filter
-              (OpamTypes.FIdent ([], OpamVariable.of_string s, None))))
+      let+ fid = fident_of_string s in
+      atom_filter fid
   | V_op2 (a, op, b) ->
       let+ fa = to_filter a and+ relop = relop op and+ fb = to_filter b in
-      OpamFormula.Atom (OpamTypes.Filter (OpamTypes.FOp (fa, relop, fb)))
+      atom_filter (FOp (fa, relop, fb))
   | V_group v ->
       let+ f = filter v in
       OpamTypes.Block f
   | V_list l -> filters l
   | V_not v ->
       let+ f = to_filter v in
-      OpamFormula.Atom (OpamTypes.Filter (FNot f))
+      atom_filter (FNot f)
   | v -> errorf "filter: %a" Ast.pp_value v
 
 and filters :
