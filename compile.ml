@@ -82,30 +82,37 @@ and filters :
     result =
  fun vs -> map_m ~f:filter vs |> Result.map OpamFormula.ands
 
-let rec filtered_formula : OpamTypes.filtered_formula decoder =
+type formula_kind = Conjunction | Disjunction
+
+let filtered_formula kind =
   let open Result_let_syntax in
-  function
-  | V_group l ->
-      let+ f = filtered_formula l in
-      OpamFormula.Block f
-  | V_list l -> map_m ~f:filtered_formula l |> Result.map OpamFormula.ands
-  | V_filter (v, v_filters) ->
-      let* name_s = as_string ~context:"filter" v in
-      let name = OpamPackage.Name.of_string name_s in
-      let+ filters = filters v_filters in
-      OpamFormula.Atom (name, filters)
-  | V_string v ->
-      let name = OpamPackage.Name.of_string v in
-      Ok (OpamFormula.Atom (name, OpamFormula.Empty))
-  | V_or (a, b) ->
-      let* fa = filtered_formula a in
-      let+ fb = filtered_formula b in
-      OpamFormula.Or (fa, fb)
-  | V_and (a, b) ->
-      let* fa = filtered_formula a in
-      let+ fb = filtered_formula b in
-      OpamFormula.And (fa, fb)
-  | v -> errorf "filtered_formula: %a" Ast.pp_value v
+  let join =
+    match kind with
+    | Conjunction -> OpamFormula.ands
+    | Disjunction -> OpamFormula.ors
+  in
+  let rec go : OpamTypes.filtered_formula decoder = function
+    | V_group l ->
+        let+ f = go l in
+        OpamFormula.Block f
+    | V_list l -> map_m ~f:go l |> Result.map join
+    | V_filter (v, v_filters) ->
+        let* name_s = as_string ~context:"filter" v in
+        let name = OpamPackage.Name.of_string name_s in
+        let+ filters = filters v_filters in
+        OpamFormula.Atom (name, filters)
+    | V_string v ->
+        let name = OpamPackage.Name.of_string v in
+        Ok (OpamFormula.Atom (name, OpamFormula.Empty))
+    | V_or (a, b) ->
+        let+ fa = go a and+ fb = go b in
+        OpamFormula.Or (fa, fb)
+    | V_and (a, b) ->
+        let+ fa = go a and+ fb = go b in
+        OpamFormula.And (fa, fb)
+    | v -> errorf "filtered_formula: %a" Ast.pp_value v
+  in
+  go
 
 let add_filter arg f =
   match arg with
@@ -181,10 +188,10 @@ let compile { Ast.sections; filename } =
           let+ cmds = commands v in
           OpamFile.OPAM.with_build cmds opam
       | [ [ "depends" ] ] ->
-          let+ depends = filtered_formula v in
+          let+ depends = filtered_formula Conjunction v in
           OpamFile.OPAM.with_depends depends opam
       | [ [ "depopts" ] ] ->
-          let+ depopts = filtered_formula v in
+          let+ depopts = filtered_formula Disjunction v in
           OpamFile.OPAM.with_depopts depopts opam
       | [ [ "depexts" ] ] -> (* TODO set it *) Ok opam
       | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
