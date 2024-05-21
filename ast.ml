@@ -24,23 +24,13 @@ type value =
   | V_not of value
   | V_group of value
 
-let pp_list pp ppf l =
-  let first = ref true in
-  Format.fprintf ppf "[";
-  List.iter
-    (fun x ->
-      if !first then first := false else Format.fprintf ppf "; ";
-      pp ppf x)
-    l;
-  Format.fprintf ppf "]"
-
 let rec pp_value ppf = function
   | V_string s -> Format.fprintf ppf "V_string %S" s
-  | V_list v -> Format.fprintf ppf "V_list %a" (pp_list pp_value) v
+  | V_list v -> Format.fprintf ppf "V_list %a" (Pp.list pp_value) v
   | V_ident s -> Format.fprintf ppf "V_ident %S" s
   | V_var _ -> Format.fprintf ppf "V_var _"
   | V_filter (v, fs) ->
-      Format.fprintf ppf "V_filter (%a, %a)" pp_value v (pp_list pp_value) fs
+      Format.fprintf ppf "V_filter (%a, %a)" pp_value v (Pp.list pp_value) fs
   | V_or (a, b) -> Format.fprintf ppf "V_or (%a, %a)" pp_value a pp_value b
   | V_op (op, v) -> Format.fprintf ppf "V_op (%a, %a)" pp_op op pp_value v
   | V_op2 (a, op, b) ->
@@ -56,6 +46,6 @@ let pp ppf { sections; filename = _ } =
   List.iter
     (fun (k, v) ->
       Format.fprintf ppf "%a\n%a\n"
-        (pp_list (pp_list Format.pp_print_string))
+        (Pp.list (Pp.list Format.pp_print_string))
         k pp_value v)
     sections

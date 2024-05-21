@@ -23,7 +23,7 @@ let fident_of_string s =
            ( [ Some (OpamPackage.Name.of_string pre) ],
              OpamVariable.of_string s,
              None ))
-  | l -> errorf "fident_of_string: %a" (Ast.pp_list Format.pp_print_string) l
+  | l -> errorf "fident_of_string: %a" (Pp.list Format.pp_print_string) l
 
 let rec to_filter : OpamTypes.filter decoder =
   let open Result_let_syntax in
@@ -197,7 +197,9 @@ let compile { Ast.sections; filename } =
       | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
       | [ [ "description" ] ] -> (* TODO set it *) Ok opam
       | [ [ "extra-files" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "conflicts" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "conflicts" ] ] ->
+          let+ conflicts = filtered_formula Disjunction v in
+          OpamFile.OPAM.with_conflicts conflicts opam
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
