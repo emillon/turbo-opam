@@ -29,8 +29,11 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.build <> b.build then
     errorf "build differs:\n%a\n%a" Pp.commands a.build Pp.commands b.build
   else if a.conflicts <> b.conflicts then
-    errorf "build differs:\n%a\n%a" Pp.filtered_formula a.conflicts
+    errorf "conflicts differs:\n%a\n%a" Pp.filtered_formula a.conflicts
       Pp.filtered_formula b.conflicts
+  else if a.available <> b.available then
+    errorf "available differs:\n%a\n%a" Pp.filter a.available Pp.filter
+      b.available
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
@@ -38,7 +41,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
    {
 
      conflict_class = t.conflict_class;
-     available  = t.available;
      flags      =
        (List.filter (function
             | Pkgflag_LightUninstall

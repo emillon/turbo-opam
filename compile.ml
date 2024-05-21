@@ -223,6 +223,9 @@ let compile { Ast.sections; filename } =
       | [ [ "conflicts" ] ] ->
           let+ conflicts = filtered_formula Disjunction v in
           OpamFile.OPAM.with_conflicts conflicts opam
+      | [ [ "available" ] ] ->
+          let+ available = to_filter v in
+          OpamFile.OPAM.with_available available opam
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
@@ -236,7 +239,6 @@ let compile { Ast.sections; filename } =
       | [ [ "remove" ] ] -> (* TODO set it *) Ok opam
       | [ [ "flags" ] ] -> (* TODO set it *) Ok opam
       | [ [ "substs" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "available" ] ] -> (* TODO set it *) Ok opam
       | [ [ "run-test" ] ] -> (* TODO set it *) Ok opam
       | [ [ "version" ] ] -> (* TODO set it *) Ok opam
       | [ [ "author" ] ] -> (* TODO set it *) Ok opam
