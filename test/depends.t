@@ -107,10 +107,6 @@
   >   "a" {!(b = "c" & d < "e")}
   > ]
   > EOF
-  different result for string.0.opam: depends differs:
-  a {!(b = "c" & d < "e")}
-  a {(!(b = "c") | !(d < "e"))}
-  [1]
 
   $ turbo-opam parse << EOF
   > depends: [

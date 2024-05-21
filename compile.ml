@@ -14,6 +14,14 @@ let relop : Ast.op -> _ = function
 
 type 'a decoder = Ast.value -> ('a, string) result
 
+let neg_op = function
+  | Ast.Ge -> Ast.Lt
+  | Lt -> Ge
+  | Le -> Gt
+  | Gt -> Le
+  | Neq -> Eq
+  | Eq -> Neq
+
 let fident_of_string s =
   match String.split_on_char ':' s with
   | [ s ] -> Ok (OpamTypes.FIdent ([], OpamVariable.of_string s, None))
@@ -70,10 +78,25 @@ let rec filter :
       let+ f = filter v in
       OpamTypes.Block f
   | V_list l -> filters l
-  | V_not v ->
-      let+ f = to_filter v in
-      atom_filter (FNot f)
+  | V_not v -> filter_not v
   | v -> errorf "filter: %a" Ast.pp_value v
+
+and filter_not :
+    OpamTypes.filter OpamTypes.filter_or_constraint OpamFormula.formula decoder
+    =
+  let open Result_let_syntax in
+  function
+  | V_ident _ as v ->
+      let+ f = to_filter v in
+      OpamFormula.Atom (OpamTypes.Filter (FNot f))
+  | V_group v -> filter (V_group (V_not v))
+  | V_list l -> map_m ~f:filter_not l |> Result.map OpamFormula.ors
+  | V_and (va, vb) -> filter (V_or (V_not va, V_not vb))
+  | V_op (op, v) -> filter (V_op (neg_op op, v))
+  | V_op2 (a, op, b) ->
+      let+ fa = to_filter a and+ relop = relop op and+ fb = to_filter b in
+      OpamFormula.Atom (OpamTypes.Filter (FNot (FOp (fa, relop, fb))))
+  | v -> errorf "filter_not: %a" Ast.pp_value v
 
 and filters :
     Ast.value list ->

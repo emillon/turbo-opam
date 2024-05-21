@@ -26,8 +26,7 @@ let ident ppf (name_opt_list, v, string_string_opt) =
     (option (pair Format.pp_print_string Format.pp_print_string))
     string_string_opt
 
-let relop ppf op =
-  Format.fprintf ppf "%s" (OpamPrinter.FullPos.relop_kind op)
+let relop ppf op = Format.fprintf ppf "%s" (OpamPrinter.FullPos.relop_kind op)
 
 let rec filter ppf = function
   | OpamTypes.FBool _ -> Format.fprintf ppf "FBool _"
