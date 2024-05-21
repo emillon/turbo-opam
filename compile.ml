@@ -149,7 +149,8 @@ let command : OpamTypes.command decoder =
 let commands : OpamTypes.command list decoder =
   let open Result_let_syntax in
   function
-  | (V_string _ | V_ident _ | V_filter _ | V_list (V_string _ :: _)) as v ->
+  | ( V_string _ | V_ident _ | V_filter _
+    | V_list ((V_string _ | V_ident _) :: _) ) as v ->
       let+ c = command v in
       [ c ]
   | V_list l -> map_m ~f:command l

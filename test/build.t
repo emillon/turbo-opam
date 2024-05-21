@@ -49,3 +49,7 @@
   $ turbo-opam parse << EOF
   > build: ["pkg-config" "libcurl"] {os != "macos"}
   > EOF
+
+  $ turbo-opam parse << EOF
+  > build: [make "all"]
+  > EOF
