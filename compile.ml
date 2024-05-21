@@ -239,6 +239,21 @@ let extra_files : (OpamFilename.Base.t * OpamHash.t) list option decoder =
       Some [ r ]
   | v -> errorf "extra_files: %a" Ast.pp_value v
 
+let subst : _ decoder = function
+  | V_string s ->
+      let s = OpamFilename.Base.of_string s in
+      Ok s
+  | v -> errorf "substs: %a" Ast.pp_value v
+
+let substs : _ decoder =
+  let open Result_let_syntax in
+  function
+  | V_list l -> map_m ~f:subst l
+  | V_string _ as v ->
+      let+ s = subst v in
+      [ s ]
+  | v -> errorf "substs: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -295,6 +310,9 @@ let compile { Ast.sections; filename } =
       | [ [ "patches" ] ] ->
           let+ patches = patches v in
           OpamFile.OPAM.with_patches patches opam
+      | [ [ "substs" ] ] ->
+          let+ substs = substs v in
+          OpamFile.OPAM.with_substs substs opam
       | [ [ "doc" ] ] -> (* TODO set it *) Ok opam
       | [ [ "license" ] ] -> (* TODO set it *) Ok opam
       | [ [ "x-commit-hash" ] ] -> (* TODO set it *) Ok opam
@@ -304,7 +322,6 @@ let compile { Ast.sections; filename } =
       | [ [ "messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "tags" ] ] -> (* TODO set it *) Ok opam
       | [ [ "flags" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "substs" ] ] -> (* TODO set it *) Ok opam
       | [ [ "version" ] ] -> (* TODO set it *) Ok opam
       | [ [ "author" ] ] -> (* TODO set it *) Ok opam
       | [ [ "build-env" ] ] -> (* TODO set it *) Ok opam

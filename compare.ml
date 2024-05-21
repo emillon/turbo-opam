@@ -54,6 +54,9 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
       a.extra_files
       (Pp.option (Pp.list Pp.extra_file))
       b.extra_files
+  else if a.substs <> b.substs then
+    errorf "substs differs:\n%a\n%a" (Pp.list Pp.basename) a.substs
+      (Pp.list Pp.basename) b.substs
   else Ok ()
 (*
      OpamFile.OPAM.effective_part

@@ -24,3 +24,11 @@
   $ turbo-opam parse << EOF
   > extra-files: ["a" "md5=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
   > EOF
+
+  $ turbo-opam parse << EOF
+  > substs: ["a"]
+  > EOF
+
+  $ turbo-opam parse << EOF
+  > substs: "a"
+  > EOF

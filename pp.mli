@@ -8,3 +8,4 @@ val filter : OpamTypes.filter t
 val name : OpamPackage.Name.t t
 val patch : (OpamFilename.Base.t * OpamTypes.filter option) t
 val extra_file : (OpamFilename.Base.t * OpamHash.t) t
+val basename : OpamFilename.Base.t t
