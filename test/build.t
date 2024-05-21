@@ -64,3 +64,15 @@
   >                      ez-conf-lib.config.in > ez-conf-lib.config" ]
   > ]
   > EOF
+
+  $ turbo-opam parse << 'EOF'
+  > build: [
+  >   ["sh" "-c" """#!/bin/sh
+  >     set -eufx
+  >     if command -v brew; then
+  >       eval $(brew shellenv)
+  >       test -e Brewfile
+  >     fi
+  >    """]
+  > ]
+  > EOF

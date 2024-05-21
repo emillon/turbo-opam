@@ -45,7 +45,10 @@ and string_spaces buf = parse
 and triple_string buf = parse
     | "\"\"\"" { String (Buffer.contents buf) }
     | "\\\"" { Buffer.add_char buf '\"'; triple_string buf lexbuf }
-    | '\n' { Lexing.new_line lexbuf; triple_string buf lexbuf }
+    | '\n' { Buffer.add_char buf '\n';
+             Lexing.new_line lexbuf;
+             triple_string buf lexbuf
+           }
     | _ as c { Buffer.add_char buf c; triple_string buf lexbuf }
 
 and line_comment = parse
