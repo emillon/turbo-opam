@@ -59,3 +59,5 @@ let command ppf (args, filter_o) =
 let commands = list command
 let basename ppf x = Format.fprintf ppf "%s" (OpamFilename.Base.to_string x)
 let patch = pair basename (option filter)
+let hash ppf _ = Format.fprintf ppf "_"
+let extra_file = pair basename hash

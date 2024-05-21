@@ -46,6 +46,12 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.patches <> b.patches then
     errorf "patches differs:\n%a\n%a" (Pp.list Pp.patch) a.patches
       (Pp.list Pp.patch) b.patches
+  else if a.extra_files <> b.extra_files then
+    errorf "extra-files differs:\n%a\n%a"
+      (Pp.option (Pp.list Pp.extra_file))
+      a.extra_files
+      (Pp.option (Pp.list Pp.extra_file))
+      b.extra_files
   else Ok ()
 (*
      OpamFile.OPAM.effective_part

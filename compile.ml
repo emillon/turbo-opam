@@ -221,6 +221,24 @@ let patches : (OpamFilename.Base.t * OpamTypes.filter option) list decoder =
       [ p ]
   | v -> errorf "patches: %a" Ast.pp_value v
 
+let extra_file : (OpamFilename.Base.t * OpamHash.t) decoder = function
+  | V_list [ V_string s; V_string h ] ->
+      let s = OpamFilename.Base.of_string s in
+      let h = OpamHash.of_string h in
+      Ok (s, h)
+  | v -> errorf "extra_file: %a" Ast.pp_value v
+
+let extra_files : (OpamFilename.Base.t * OpamHash.t) list option decoder =
+  let open Result_let_syntax in
+  function
+  | V_list (V_list _ :: _ as l) ->
+      let+ r = map_m ~f:extra_file l in
+      Some r
+  | V_list _ as v ->
+      let+ r = extra_file v in
+      Some [ r ]
+  | v -> errorf "extra_files: %a" Ast.pp_value v
+
 let compile { Ast.sections; filename } =
   let pkg =
     OpamFilename.of_string filename |> OpamPackage.of_filename |> Option.get
@@ -259,7 +277,9 @@ let compile { Ast.sections; filename } =
       | [ [ "depexts" ] ] -> (* TODO set it *) Ok opam
       | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
       | [ [ "description" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "extra-files" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "extra-files" ] ] ->
+          let+ extra_files = extra_files v in
+          OpamFile.OPAM.with_extra_files_opt extra_files opam
       | [ [ "conflicts" ] ] ->
           let+ conflicts = filtered_formula Disjunction v in
           OpamFile.OPAM.with_conflicts conflicts opam
