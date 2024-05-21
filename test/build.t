@@ -30,10 +30,6 @@
   $ turbo-opam parse << EOF
   > build: ["dune" "build" "-p" name "-j" jobs]
   > EOF
-  different result for string.0.opam: build differs:
-  [["dune"]; ["build"]; ["-p"]; [name]; ["-j"]; [jobs]]
-  [["dune"; "build"; "-p"; name; "-j"; jobs]]
-  [1]
 
   $ turbo-opam parse << EOF
   > build: "omake"
