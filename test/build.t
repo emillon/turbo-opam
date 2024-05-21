@@ -76,3 +76,9 @@
   >    """]
   > ]
   > EOF
+
+  $ turbo-opam parse << 'EOF'
+  > build: [
+  >   ["sed" "-e" "16i\\\n#include <stdio.h>" "-i.bak" "lib/user_exit.c"]
+  > ]
+  > EOF
