@@ -37,27 +37,18 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.conflict_class <> b.conflict_class then
     errorf "conflict-class differs:\n%a\n%a" (Pp.list Pp.name) a.conflict_class
       (Pp.list Pp.name) b.conflict_class
+  else if a.install <> b.install then
+    errorf "install differs:\n%a\n%a" Pp.commands a.install Pp.commands
+      b.install
   else Ok ()
 (*
      OpamFile.OPAM.effective_part
 
    {
 
-     flags      =
-       (List.filter (function
-            | Pkgflag_LightUninstall
-            | Pkgflag_Verbose
-            | Pkgflag_Plugin
-            | Pkgflag_Compiler
-            | Pkgflag_Conf
-            | Pkgflag_AvoidVersion
-            | Pkgflag_Unknown _
-              -> false)
-           t.flags);
      env        = t.env;
 
      run_test   = t.deprecated_build_test @ t.run_test;
-     install    = t.install;
      remove     = t.remove;
 
      substs     = t.substs;

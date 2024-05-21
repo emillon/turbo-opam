@@ -226,6 +226,9 @@ let compile { Ast.sections; filename } =
       | [ [ "build" ] ] ->
           let+ cmds = commands v in
           OpamFile.OPAM.with_build cmds opam
+      | [ [ "install" ] ] ->
+          let+ cmds = commands v in
+          OpamFile.OPAM.with_install cmds opam
       | [ [ "depends" ] ] ->
           let+ depends = filtered_formula Conjunction v in
           OpamFile.OPAM.with_depends depends opam
@@ -254,7 +257,6 @@ let compile { Ast.sections; filename } =
       | [ [ "post-messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "messages" ] ] -> (* TODO set it *) Ok opam
       | [ [ "tags" ] ] -> (* TODO set it *) Ok opam
-      | [ [ "install" ] ] -> (* TODO set it *) Ok opam
       | [ [ "remove" ] ] -> (* TODO set it *) Ok opam
       | [ [ "flags" ] ] -> (* TODO set it *) Ok opam
       | [ [ "substs" ] ] -> (* TODO set it *) Ok opam
