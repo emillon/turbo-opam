@@ -11,7 +11,10 @@
           pname = "turbo-opam";
           version = "n/a";
           src = ./.;
-          propagatedBuildInputs = with pkgs.ocamlPackages; [
+          nativeBuildInputs = with pkgs.ocamlPackages; [
+            menhir
+          ];
+          buildInputs = with pkgs.ocamlPackages; [
             cmdliner
             menhir
             opam-format
