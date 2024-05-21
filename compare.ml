@@ -72,6 +72,9 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
   else if a.depends <> b.depends then
     errorf "depends differs:\n%a\n%a" pp_filtered_formula a.depends
       pp_filtered_formula b.depends
+  else if a.depopts <> b.depopts then
+    errorf "depopts differs:\n%a\n%a" pp_filtered_formula a.depopts
+      pp_filtered_formula b.depopts
   else if a.build <> b.build then
     errorf "build differs:\n%a\n%a" pp_commands a.build pp_commands b.build
   else Ok ()
@@ -80,7 +83,6 @@ let compare_opam_files (a : OpamFile.OPAM.t) (b : OpamFile.OPAM.t) =
 
    {
 
-     depopts    = t.depopts;
      conflicts  = t.conflicts;
      conflict_class = t.conflict_class;
      available  = t.available;

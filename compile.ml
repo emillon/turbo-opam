@@ -183,7 +183,9 @@ let compile { Ast.sections; filename } =
       | [ [ "depends" ] ] ->
           let+ depends = filtered_formula v in
           OpamFile.OPAM.with_depends depends opam
-      | [ [ "depopts" ] ] -> (* TODO set it *) Ok opam
+      | [ [ "depopts" ] ] ->
+          let+ depopts = filtered_formula v in
+          OpamFile.OPAM.with_depopts depopts opam
       | [ [ "depexts" ] ] -> (* TODO set it *) Ok opam
       | [ [ "synopsis" ] ] -> (* TODO set it *) Ok opam
       | [ [ "description" ] ] -> (* TODO set it *) Ok opam
