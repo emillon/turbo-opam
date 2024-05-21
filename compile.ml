@@ -80,7 +80,7 @@ and filters :
     ( OpamTypes.filter OpamTypes.filter_or_constraint OpamFormula.formula,
       string )
     result =
- fun vs -> List.map filter vs |> traverse |> Result.map OpamFormula.ands
+ fun vs -> map_m ~f:filter vs |> Result.map OpamFormula.ands
 
 let rec filtered_formula : OpamTypes.filtered_formula decoder =
   let open Result_let_syntax in
@@ -88,8 +88,7 @@ let rec filtered_formula : OpamTypes.filtered_formula decoder =
   | V_group l ->
       let+ f = filtered_formula l in
       OpamFormula.Block f
-  | V_list l ->
-      List.map filtered_formula l |> traverse |> Result.map OpamFormula.ands
+  | V_list l -> map_m ~f:filtered_formula l |> Result.map OpamFormula.ands
   | V_filter (v, v_filters) ->
       let* name_s = as_string ~context:"filter" v in
       let name = OpamPackage.Name.of_string name_s in
@@ -130,7 +129,7 @@ let args : OpamTypes.arg list decoder =
   | (V_string _ | V_ident _ | V_filter _) as v ->
       let+ arg = arg v in
       [ arg ]
-  | V_list l -> List.map arg l |> traverse
+  | V_list l -> map_m ~f:arg l
   | v -> errorf "args: %a" Ast.pp_value v
 
 let command : OpamTypes.command decoder =
@@ -150,7 +149,7 @@ let command : OpamTypes.command decoder =
 let commands : OpamTypes.command list decoder =
   let open Result_let_syntax in
   function
-  | V_list l -> List.map command l |> traverse
+  | V_list l -> map_m ~f:command l
   | (V_string _ | V_ident _ | V_filter _) as v ->
       let+ c = command v in
       [ c ]
