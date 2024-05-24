@@ -32,6 +32,8 @@ hyperfine
   './_build/install/default/bin/turbo-opam bench ~/src/opam-repository --parser experiment'
 ```
 
+(this is packaged as `nix build .#bench`)
+
 ## Results
 
 The experimental pipeline is 1.8x faster than the vanilla one.
